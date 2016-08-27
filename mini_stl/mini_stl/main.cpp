@@ -8,8 +8,10 @@
 
 #include <iostream>
 
-int main(int argc, const char * argv[]) {
-    // insert code here...
-    std::cout << "Hello, World!\n";
+using namespace std;
+
+int main()
+{
+    cout << "hello world" << endl;
     return 0;
 }
