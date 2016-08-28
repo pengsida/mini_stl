@@ -7,6 +7,7 @@
 //
 
 #include <iostream>
+#include "allocator_psd.h"
 
 using namespace std;
 

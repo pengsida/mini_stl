@@ -9,14 +9,10 @@
 #ifndef alloc_psd_h
 #define alloc_psd_h
 
-#include<stddef.h>
-#include<stdlib.h>
-#include<new>
-
-#define __THROW_BAD_ALLOC std::bad_alloc()
+#include <cstdlib>
 
 namespace mini_stl {
-    template<int inst>
+    
     class __malloc_alloc_template
     {
     private:
@@ -48,43 +44,39 @@ namespace mini_stl {
         }
     };
     
-    template<int inst>
-    void (* __malloc_alloc_template<inst>::__malloc_alloc_oom_handler)() = 0;
+    void (* __malloc_alloc_template::__malloc_alloc_oom_handler)() = 0;
     
-    template<int inst>
-    void* __malloc_alloc_template<inst>::oom_malloc(size_t n)
+    void* __malloc_alloc_template::oom_malloc(size_t n)
     {
         void (*my_malloc_handler)();
         void* result;
         while(1)
         {
             my_malloc_handler = __malloc_alloc_oom_handler;
-            if(0 == my_malloc_handler) __THROW_BAD_ALLOC;
+            if(0 == my_malloc_handler) exit(1);
             (*my_malloc_handler)();
             result = malloc(n);
             if(result) return result;
         }
     }
     
-    template<int inst>
-    void* __malloc_alloc_template<inst>::oom_realloc(void* p, size_t new_sz)
+    void* __malloc_alloc_template::oom_realloc(void* p, size_t new_sz)
     {
         void (*my_malloc_handler)();
         void* result;
         while(1)
         {
             my_malloc_handler = __malloc_alloc_oom_handler;
-            if(0 == my_malloc_handler) __THROW_BAD_ALLOC;
+            if(0 == my_malloc_handler) exit(1);
             (*my_malloc_handler)();
             result = oom_realloc(p, new_sz);
             if(result) return result;
         }
     }
     
-    typedef __malloc_alloc_template<0> malloc_alloc;
-    typedef malloc_alloc alloc;
+    typedef __malloc_alloc_template malloc_alloc;
     
-    template<typename data_type, typename Alloc>
+    template<typename data_type, typename Alloc = malloc_alloc>
     class simple_alloc
     {
     public:
