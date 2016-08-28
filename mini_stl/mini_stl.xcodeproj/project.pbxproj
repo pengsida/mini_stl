@@ -26,6 +26,11 @@
 		49A849C21D7139C5006E30CC /* mini_stl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mini_stl; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A849C51D7139C5006E30CC /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		49A849CD1D71732D006E30CC /* alloc_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = alloc_psd.h; sourceTree = "<group>"; };
+		49A9923E1D72E9E400B7BBC2 /* allocator_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = allocator_psd.h; sourceTree = "<group>"; };
+		49A9923F1D72FDC400B7BBC2 /* construct_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = construct_psd.h; sourceTree = "<group>"; };
+		49A992401D730BAD00B7BBC2 /* type_traits_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = type_traits_psd.h; sourceTree = "<group>"; };
+		49A992411D730D9B00B7BBC2 /* iterator_traits_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iterator_traits_psd.h; sourceTree = "<group>"; };
+		49FD3B9C1D7276AA00BF9916 /* alloc_default_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = alloc_default_psd.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -60,6 +65,11 @@
 			children = (
 				49A849C51D7139C5006E30CC /* main.cpp */,
 				49A849CD1D71732D006E30CC /* alloc_psd.h */,
+				49FD3B9C1D7276AA00BF9916 /* alloc_default_psd.h */,
+				49A9923E1D72E9E400B7BBC2 /* allocator_psd.h */,
+				49A9923F1D72FDC400B7BBC2 /* construct_psd.h */,
+				49A992401D730BAD00B7BBC2 /* type_traits_psd.h */,
+				49A992411D730D9B00B7BBC2 /* iterator_traits_psd.h */,
 			);
 			path = mini_stl;
 			sourceTree = "<group>";
@@ -241,6 +251,7 @@
 				49A849CB1D7139C5006E30CC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
