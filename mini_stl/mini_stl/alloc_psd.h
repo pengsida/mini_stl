@@ -9,9 +9,11 @@
 #ifndef alloc_psd_h
 #define alloc_psd_h
 
+#include <cstddef>
 #include <cstdlib>
 
-namespace mini_stl {
+namespace mini_stl
+{
     
     class __malloc_alloc_template
     {
@@ -102,43 +104,4 @@ namespace mini_stl {
 
 
 #endif /* alloc_psd_h */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

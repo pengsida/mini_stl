@@ -9,7 +9,8 @@
 #ifndef allocator_psd_h
 #define allocator_psd_h
 
-namespace mini_stl {
+namespace mini_stl
+{
     template<typename T, typename Alloc>
     class allocator
     {
@@ -27,7 +28,7 @@ namespace mini_stl {
         static value_type* allocate();
         static void deallocate(pointer p, size_t n);
         static void deallocate(pointer p);
-        static void reallocate(pointer p, size_t old_sz, size_t new_sz);
+        static value_type* reallocate(pointer p, size_t old_sz, size_t new_sz);
     };
     
     template<typename T, typename Alloc>
@@ -42,7 +43,23 @@ namespace mini_stl {
         return static_cast<pointer>(Alloc::allocator(sizeof(value_type)));
     }
     
-    void
+    template<typename T, typename Alloc>
+    void allocator<T, Alloc>::deallocate(pointer p, size_t n)
+    {
+        Alloc::deallocate(p, n * sizeof(value_type));
+    }
+    
+    template<typename T, typename Alloc>
+    void allocator<T, Alloc>::deallocate(pointer p)
+    {
+        Alloc::deallocate(p, sizeof(value_type));
+    }
+    
+    template<typename T, typename Alloc>
+    typename allocator<T, Alloc>::value_type* allocator<T, Alloc>::reallocate(pointer p, size_t old_sz, size_t new_sz)
+    {
+        Alloc::reallocate(p, old_sz, new_sz);
+    }
 }
 
 #endif /* allocator_psd_h */

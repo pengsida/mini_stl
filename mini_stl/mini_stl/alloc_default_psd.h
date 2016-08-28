@@ -13,7 +13,8 @@
 #include "alloc_psd.h"
 #endif
 
-namespace mini_stl {
+namespace mini_stl
+{
     class default_alloc_template
     {
     private:
@@ -202,26 +203,3 @@ namespace mini_stl {
 }
 
 #endif /* alloc_default_psd_h */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
