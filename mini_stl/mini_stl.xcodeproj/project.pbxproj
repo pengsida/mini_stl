@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		49A849C61D7139C5006E30CC /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 49A849C51D7139C5006E30CC /* main.cpp */; };
+		49F469841D752B28004461C0 /* vector_psd.h in Sources */ = {isa = PBXBuildFile; fileRef = 49F469831D752B28004461C0 /* vector_psd.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,6 +31,8 @@
 		49A9923F1D72FDC400B7BBC2 /* construct_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = construct_psd.h; sourceTree = "<group>"; };
 		49A992401D730BAD00B7BBC2 /* type_traits_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = type_traits_psd.h; sourceTree = "<group>"; };
 		49A992411D730D9B00B7BBC2 /* iterator_traits_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iterator_traits_psd.h; sourceTree = "<group>"; };
+		49F469831D752B28004461C0 /* vector_psd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = vector_psd.h; sourceTree = "<group>"; };
+		49F469851D7557DB004461C0 /* reverse_iterator_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = reverse_iterator_psd.h; sourceTree = "<group>"; };
 		49FD3B9C1D7276AA00BF9916 /* alloc_default_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = alloc_default_psd.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -70,6 +73,8 @@
 				49A9923F1D72FDC400B7BBC2 /* construct_psd.h */,
 				49A992401D730BAD00B7BBC2 /* type_traits_psd.h */,
 				49A992411D730D9B00B7BBC2 /* iterator_traits_psd.h */,
+				49F469831D752B28004461C0 /* vector_psd.h */,
+				49F469851D7557DB004461C0 /* reverse_iterator_psd.h */,
 			);
 			path = mini_stl;
 			sourceTree = "<group>";
@@ -130,6 +135,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				49F469841D752B28004461C0 /* vector_psd.h in Sources */,
 				49A849C61D7139C5006E30CC /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
