@@ -7,7 +7,7 @@
 //
 
 #include <iostream>
-#include "construct_psd.h"
+#include "vector_psd.h"
 
 using namespace std;
 

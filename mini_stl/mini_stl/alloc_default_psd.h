@@ -13,6 +13,8 @@
 #include "alloc_psd.h"
 #endif
 
+#include <cstring>
+
 namespace mini_stl
 {
     class default_alloc_template

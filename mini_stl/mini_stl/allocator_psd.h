@@ -9,6 +9,10 @@
 #ifndef allocator_psd_h
 #define allocator_psd_h
 
+#include "alloc_psd.h"
+#include "alloc_default_psd.h"
+#include "construct_psd.h"
+
 namespace mini_stl
 {
     template<typename T, typename Alloc>
