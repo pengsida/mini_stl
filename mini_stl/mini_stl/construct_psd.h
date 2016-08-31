@@ -26,12 +26,14 @@ namespace mini_stl
     template<typename T1, typename T2>
     inline void construct(T1 * p, const T2 & value)
     {
+        // placement new：只是operator new重载的一个版本。它并不分配内存，只是返回指向已经分配好的某段内存的一个指针。因此不能删除它，但需要调用对象的析构函数。
         new ((void*)p) T1(value);
     }
     
     template<typename T1>
     inline void construct(T1 * p)
     {
+        //placement new：只是operator new重载的一个版本。它并不分配内存，只是返回指向已经分配好的某段内存的一个指针。因此不能删除它，但需要调用对象的析构函数。
         new ((void*)p) T1();
     }
     

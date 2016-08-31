@@ -38,12 +38,15 @@ namespace mini_stl
         void initialize(size_type count, const value_type& value);
         
     public:
+        // constructor
         vector():start(0),finish(0),end_of_storage(0){}
         explicit vector(size_type count, const value_type& value);
         explicit vector(size_type count);
         explicit vector(const self& rhs);
-        ~vector();
         self& operator=(const self& rhs);
+        
+        // destructor
+        ~vector();
         
         // Iterator
         iterator begin();
@@ -82,6 +85,9 @@ namespace mini_stl
         void clear();
     };
     
+    //////////////////////////////////////
+    // constructor
+    
     template<typename T, typename Alloc>
     void vector<T,Alloc>::initialize(size_type count, const value_type& value)
     {
@@ -105,8 +111,48 @@ namespace mini_stl
     template<typename T, typename Alloc>
     vector<T,Alloc>::vector(const self& rhs)
     {
-        initialize(rhs.size(), value_type());
+        start = data_allocator::allocate(rhs.size());
+        finish = uninitialized_copy(rhs.begin(), rhs.end(), start);
     }
+    
+    template<typename T, typename Alloc>
+    typename vector<T,Alloc>::self& vector<T,Alloc>::operator=(const self& rhs)
+    {
+        if(&rhs != this)
+        {
+            size_type rhs_size = rhs.size();
+            if(rhs_size > capacity())
+            {
+                destroy(start, finish);
+                data_allocator::deallocate(start, end_of_storage - start);
+                start = data_allocator::allocate(rhs_size);
+                uninitialized_copy(rhs.begin(), rhs.end(), start);
+                end_of_storage = start + rhs_size;
+            }
+            else if(rhs_size > size())
+                copy(rhs.begin(), rhs.end(), start);
+            else
+            {
+                iterator pos = copy(rhs.begin(), rhs.end(), begin());
+                destroy(pos, end());
+            }
+            finish = start + rhs_size;
+        }
+        return *this;
+    }
+    
+    ///////////////////////////////////////
+    // destructor
+    
+    template<typename T, typename Alloc>
+    vector<T,Alloc>::~vector()
+    {
+        destroy(begin(), end());
+        data_allocator::deallocate(end_of_storage - start);
+    }
+    
+    ///////////////////////////////////////
+    // Iterator
     
     template<typename T, typename Alloc>
     typename vector<T,Alloc>::iterator vector<T,Alloc>::begin()
