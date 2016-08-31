@@ -57,6 +57,13 @@ namespace mini_stl
     {
         return static_cast<typename iterator_traits<Iterator>::value_type*>(0);
     }
+    
+    template<typename Iterator>
+    inline typename iterator_traits<Iterator>::iterator_category iterator_category(const Iterator&)
+    {
+        typedef typename iterator_traits<Iterator>::iterator_category category;
+        return category();
+    }
 }
 
 #endif /* iterator_traits_psd_h */

@@ -14,6 +14,8 @@
 #include "construct_psd.h"
 #include "algorithm_psd.h"
 
+// 对象已分配内存空间且还未初始化时使用
+
 namespace mini_stl
 {
     // uninitialized_copy
@@ -31,17 +33,17 @@ namespace mini_stl
             construct(&*start, *first);
     }
     
-    template<typename InputIterator, typename ForwardIterator, typename T_iterator>
-    inline ForwardIterator __uninitialized_copy(InputIterator first, InputIterator last, ForwardIterator start, T_iterator*)
+    template<typename InputIterator, typename ForwardIterator, typename T_forward_iterator>
+    inline ForwardIterator __uninitialized_copy(InputIterator first, InputIterator last, ForwardIterator start, T_forward_iterator*)
     {
-        typedef typename type_traits<T_iterator>::is_POD_type is_POD;
+        typedef typename type_traits<T_forward_iterator>::is_POD_type is_POD;
         return __uninitialized_copy_aux(first, last, start, is_POD());
     }
     
     template<typename InputIterator, typename ForwardIterator>
     inline ForwardIterator uninitialized_copy(InputIterator first, InputIterator last, ForwardIterator start)
     {
-        return __uninitialized_copy(first, last, start, __value_type(first));
+        return __uninitialized_copy(first, last, start, __value_type(start));
     }
     
     

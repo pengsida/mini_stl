@@ -333,7 +333,7 @@ namespace mini_stl
             if(finish == end_of_storage)
                 reserve(capacity() * 2);
             position = begin() + pos;
-            copy_backward(position - 1, end() - 1, end());
+            copy_backward(position, end(), end()+1);
             construct(position, v);
             finish++;
         }
@@ -344,7 +344,35 @@ namespace mini_stl
     template<typename T, typename Alloc>
     typename vector<T,Alloc>::iterator vector<T,Alloc>::insert(iterator position, const_iterator first, const_iterator last)
     {
-        
+        if(first != last)
+        {
+            size_type num_insert = 0;
+            distance(first, last, num_insert);
+            if(size_type(end_of_storage - finish) >= num_insert)
+            {
+                const size_type elem_after_pos = finish - position;
+                iterator old_finish = finish;
+                if(elem_after_pos < num_insert)
+                {
+                    uninitialized_copy(position, end(), position + num_insert);
+                    finish += num_insert;
+                    copy(first, first + elem_after_pos, position);
+                    uninitialized_copy(first + elem_after_pos, last, end());
+                }
+                else
+                {
+                    uninitialized_copy(finish - num_insert, finish, finish);
+                    finish += num_insert;
+                    copy_backward(position, old_finish - num_insert, old_finish);
+                    copy(first, last, position);
+                }
+            }
+            else
+            {
+                
+            }
+        }
+        return position;
     }
     
     template<typename T, typename Alloc>
@@ -378,51 +406,3 @@ namespace mini_stl
         
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

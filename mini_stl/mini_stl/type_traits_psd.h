@@ -35,16 +35,6 @@ namespace mini_stl
         typedef true_type is_POD_type;
     };
     
-    template<typename T>
-    struct type_traits<const T*>
-    {
-        typedef true_type has_trivial_default_constructor;
-        typedef true_type has_trivial_copy_construcor;
-        typedef true_type has_trivial_assignment_operator;
-        typedef true_type has_trivial_destructor;
-        typedef true_type is_POD_type;
-    };
-    
     template<>
     struct type_traits<bool>
     {

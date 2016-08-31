@@ -58,6 +58,12 @@ namespace mini_stl
         bool operator>(const self& rhs);
         bool operator<=(const self& rhs);
         bool operator>=(const self& rhs);
+        
+        // subtract
+        difference_type operator-(const self& rhs) const;
+        
+        // friend function
+        friend Iterator operator+(difference_type n, const self& rhs);
     };
     
     template<typename Iterator>
@@ -184,53 +190,36 @@ namespace mini_stl
     {
         return !(*this < rhs);
     }
+    
+    template<typename Iterator>
+    typename reverse_iterator<Iterator>::difference_type reverse_iterator<Iterator>::operator-(const self& rhs) const
+    {
+        return cur_pos - rhs.cur_pos;
+    }
+    
+    template<typename Iterator, typename DistanceType>
+    reverse_iterator<Iterator> operator+(DistanceType n, const reverse_iterator<Iterator>& rhs)
+    {
+        return reverse_iterator<Iterator>(n + rhs.cur_pos);
+    }
+    
+    template<typename RandomAccessIterator>
+    inline random_access_iterator_tag iterator_category(const reverse_iterator<RandomAccessIterator>&)
+    {
+        return random_access_iterator_tag();
+    }
+    
+    template<typename Iterator>
+    inline typename iterator_traits<Iterator>::value_type* value_type(const reverse_iterator<Iterator>&)
+    {
+        return static_cast<typename iterator_traits<Iterator>::value_type *>(0);
+    }
+    
+    template<typename Iterator>
+    inline typename iterator_traits<Iterator>::difference_type* distance_type(const reverse_iterator<Iterator>&)
+    {
+        return static_cast<typename iterator_traits<Iterator>::difference_type *>(0);
+    }
 }
 
 #endif /* reverse_iterator_psd_h */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
