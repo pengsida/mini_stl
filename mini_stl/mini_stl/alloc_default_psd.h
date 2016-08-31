@@ -177,6 +177,7 @@ namespace mini_stl
     
     void default_alloc_template::deallocate(void * p, size_t n)
     {
+        if(p == 0) return;
         if(n > MAX_BYTES)
             malloc_alloc::deallocate(p, n);
         else

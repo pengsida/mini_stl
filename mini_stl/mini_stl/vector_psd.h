@@ -8,6 +8,7 @@
 
 #include "allocator_psd.h"
 #include "reverse_iterator_psd.h"
+#include "algorithm_psd.h"
 
 namespace mini_stl
 {
@@ -61,9 +62,10 @@ namespace mini_stl
         // Capacity
         size_type size() const;
         size_type max_size() const;
-        void resize();
+        void resize(size_type new_sz, const value_type& value = value_type());
         size_type capacity() const;
         bool empty() const;
+        void reserve(size_type n);
         
         // Element access
         reference operator[](size_type index);
@@ -78,7 +80,8 @@ namespace mini_stl
         // Modifiers
         void push_back(const value_type& v);
         void pop_back();
-        void insert(const value_type& v);
+        iterator insert(iterator position, const value_type& v);
+        iterator insert(iterator position, const_iterator first, const_iterator last);
         iterator erase(iterator position);
         iterator erase(iterator first, iterator last);
         void swap();
@@ -148,7 +151,7 @@ namespace mini_stl
     vector<T,Alloc>::~vector()
     {
         destroy(begin(), end());
-        data_allocator::deallocate(end_of_storage - start);
+        data_allocator::deallocate(begin(), end_of_storage - start);
     }
     
     ///////////////////////////////////////
@@ -215,9 +218,15 @@ namespace mini_stl
     }
     
     template<typename T, typename Alloc>
-    void vector<T,Alloc>::resize()
+    void vector<T,Alloc>::resize(size_type new_sz, const value_type& value)
     {
-        //...
+        if(new_sz > capacity())
+            reserve();
+        if(new_sz > size())
+            uninitialized_fill_n(finish, new_sz - size(), value);
+        else
+            destroy(start + new_sz, finish);
+        finish = start + new_sz;
     }
     
     template<typename T, typename Alloc>
@@ -230,6 +239,22 @@ namespace mini_stl
     bool vector<T,Alloc>::empty() const
     {
         return finish == start;
+    }
+    
+    // 要求vector有n的空间大小
+    template<typename T, typename Alloc>
+    void vector<T,Alloc>::reserve(size_type n)
+    {
+        if(capacity() < n)
+        {
+            iterator new_start = data_allocator::allocate(n);
+            iterator new_finish = uninitialized_copy(begin(), end(), new_start);
+            destroy(begin(), end());
+            data_allocator::deallocate(start, capacity());
+            start = new_start;
+            finish = new_finish;
+            end_of_storage = start + n;
+        }
     }
     
     template<typename T, typename Alloc>
@@ -281,9 +306,12 @@ namespace mini_stl
     }
     
     template<typename T, typename Alloc>
-    void vector<T,Alloc>::push_back(const value_type& x)
+    void vector<T,Alloc>::push_back(const value_type& v)
     {
-        //...
+        if(end_of_storage == finish)
+            reserve(capacity() * 2);
+        construct(finish, v);
+        finish++;
     }
     
     template<typename T, typename Alloc>
@@ -293,22 +321,49 @@ namespace mini_stl
         destroy(finish);
     }
     
+    // insert会返回插入位置的迭代器
     template<typename T, typename Alloc>
-    void vector<T,Alloc>::insert(const value_type& v)
+    typename vector<T,Alloc>::iterator vector<T,Alloc>::insert(iterator position, const value_type& v)
     {
-        //...
+        if(position == finish)
+            push_back(v);
+        else
+        {
+            size_type pos = position - begin();
+            if(finish == end_of_storage)
+                reserve(capacity() * 2);
+            position = begin() + pos;
+            copy_backward(position - 1, end() - 1, end());
+            construct(position, v);
+            finish++;
+        }
+        return position;
+    }
+    
+    // 在position处插入[first, last)的元素
+    template<typename T, typename Alloc>
+    typename vector<T,Alloc>::iterator vector<T,Alloc>::insert(iterator position, const_iterator first, const_iterator last)
+    {
+        
     }
     
     template<typename T, typename Alloc>
     typename vector<T,Alloc>::iterator vector<T,Alloc>::erase(iterator position)
     {
-        //...
+        if(position + 1 != end())
+            copy(position + 1, end(), position);
+        pop_back();
+        return position;
     }
     
     template<typename T, typename Alloc>
     typename vector<T,Alloc>::iterator vector<T,Alloc>::erase(iterator first, iterator last)
     {
-        //...
+        size_type len = last - first;
+        iterator position = copy(last, end(), first);
+        destroy(position, end());
+        finish = finish - len;
+        return first;
     }
     
     template<typename T, typename Alloc>

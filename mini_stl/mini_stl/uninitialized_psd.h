@@ -9,31 +9,14 @@
 #ifndef uninitialized_psd_h
 #define uninitialized_psd_h
 
-#ifndef iterator_traits_psd_h
 #include "iterator_traits_psd.h"
-#endif
-
-#ifndef type_traits_psd_h
 #include "type_traits_psd.h"
-#endif
-
-#ifndef construct_psd_h
 #include "construct_psd.h"
-#endif
-
-#ifndef _LIBCPP_CSTRING
-#include <cstring>
-#endif
+#include "algorithm_psd.h"
 
 namespace mini_stl
 {
-    template<typename InputIterator, typename ForwardIterator>
-    inline ForwardIterator copy(InputIterator first, InputIterator last, ForwardIterator start)
-    {
-        for(; first != last; ++start, ++first)
-            *start = *first;
-        return start;
-    }
+    // uninitialized_copy
     
     template<typename InputIterator, typename ForwardIterator>
     inline ForwardIterator __uninitialized_copy_aux(InputIterator first, InputIterator last, ForwardIterator start, true_type)
@@ -61,61 +44,9 @@ namespace mini_stl
         return __uninitialized_copy(first, last, start, __value_type(first));
     }
     
-    //fill
     
-    template<typename ForwardIterator, typename T>
-    inline void fill(ForwardIterator first, ForwardIterator last, const T& value)
-    {
-        for(; first != last; ++first)
-            *first = value;
-    }
-    
-    inline void fill(unsigned char* first, unsigned char* last, const unsigned char& value)
-    {
-        unsigned char tmp = value;
-        memset(first, tmp, last - first);
-    }
-    
-    inline void fill(signed char* first, signed char* last, const signed char& value)
-    {
-        signed char tmp = value;
-        memset(first, static_cast<unsigned char>(tmp), last - first);
-    }
-    
-    inline void fill(char* first, char* last, const char& value)
-    {
-        char tmp = value;
-        memset(first, static_cast<unsigned char>(tmp), last - first);
-    }
-    
-    template<typename ForwardIterator, typename Size, typename T>
-    inline ForwardIterator fill_n(ForwardIterator first, Size n, const T& value)
-    {
-        for(; n > 0; --n, ++first)
-            *first = value;
-        return first;
-    }
-    
-    template<typename Size>
-    inline unsigned char* fill_n(unsigned char* first, Size n, const unsigned char& value)
-    {
-        fill(first, first + n, value);
-        return first + n;
-    }
-    
-    template<typename Size>
-    inline signed char* fill_n(signed char* first, Size n, const signed char& value)
-    {
-        fill(first, first + n, value);
-        return first + n;
-    }
-    
-    template<typename Size>
-    inline char* fill_n(char* first, Size n, const char& value)
-    {
-        fill(first, first + n, value);
-        return first + n;
-    }
+    ///////////////////////////////////////
+    // uninitialized_fill
     
     template<typename ForwardIterator, typename Size, typename T>
     inline ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n, const T& value, true_type)

@@ -7,11 +7,13 @@
 //
 
 #include <iostream>
-#include "vector_psd.h"
+#include "algorithm_psd.h"
+#include <vector>
 
 using namespace std;
 
 int main()
 {
+    vector<int> test(1);
     return 0;
 }

@@ -15,8 +15,11 @@ namespace mini_stl
 {
     struct input_iterator_tag{};
     struct output_iterator_tag{};
+    // forward_iterator_tag只能向前移动， 如 ++iterator
     struct forward_iterator_tag : public input_iterator_tag{};
+    // bidirectional_iterator_tag可以双向移动，如 --iterator, ++iterator
     struct bidirectional_iterator_tag : public forward_iterator_tag{};
+    // random_access_iterator_tag可以进行跳跃，如 iterator += n
     struct random_access_iterator_tag : public bidirectional_iterator_tag{};
     
     template<typename Iterator>
