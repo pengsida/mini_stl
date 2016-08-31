@@ -26,16 +26,22 @@ namespace mini_stl
         typedef reverse_iterator<iterator> reverse_iterator;
         typedef ptrdiff_t difference_type;
         typedef size_t size_type;
-    
+        
     private:
         typedef vector<T, Alloc> self;
         pointer start;
         pointer finish;
         pointer end_of_storage;
-        allocator<value_type, Alloc> data_allocator;
+        typedef allocator<value_type, Alloc> data_allocator;
+        
+    private:
+        void initialize(size_type count, const value_type& value);
         
     public:
-        vector(){}
+        vector():start(0),finish(0),end_of_storage(0){}
+        explicit vector(size_type count, const value_type& value);
+        explicit vector(size_type count);
+        explicit vector(const self& rhs);
         ~vector();
         self& operator=(const self& rhs);
         
@@ -75,6 +81,32 @@ namespace mini_stl
         void swap();
         void clear();
     };
+    
+    template<typename T, typename Alloc>
+    void vector<T,Alloc>::initialize(size_type count, const value_type& value)
+    {
+        start = data_allocator::allocate(count);
+        end_of_storage = start + count;
+        finish = uninitialized_fill_n(start, count, value);
+    }
+    
+    template<typename T, typename Alloc>
+    vector<T,Alloc>::vector(size_type count, const value_type& value)
+    {
+        initialize(count, value);
+    }
+    
+    template<typename T, typename Alloc>
+    vector<T,Alloc>::vector(size_type count)
+    {
+        initialize(count, value_type());
+    }
+    
+    template<typename T, typename Alloc>
+    vector<T,Alloc>::vector(const self& rhs)
+    {
+        initialize(rhs.size(), value_type());
+    }
     
     template<typename T, typename Alloc>
     typename vector<T,Alloc>::iterator vector<T,Alloc>::begin()

@@ -9,16 +9,28 @@
 #ifndef allocator_psd_h
 #define allocator_psd_h
 
+#ifndef alloc_psd_h
 #include "alloc_psd.h"
+#endif
+
+#ifndef alloc_default_psd_h
 #include "alloc_default_psd.h"
+#endif
+
+#ifndef construct_psd_h
 #include "construct_psd.h"
+#endif
+
+#ifndef uninitialized_psd_h
+#include "uninitialized_psd.h"
+#endif
 
 namespace mini_stl
 {
     template<typename T, typename Alloc>
     class allocator
     {
-    private:
+    public:
         typedef size_t size_type;
         typedef ptrdiff_t difference_type;
         typedef T value_type;
@@ -28,6 +40,7 @@ namespace mini_stl
         typedef const T& const_reference;
         
     public:
+        allocator(){}
         static value_type* allocate(size_t n);
         static value_type* allocate();
         static void deallocate(pointer p, size_t n);
