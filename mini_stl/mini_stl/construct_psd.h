@@ -40,6 +40,7 @@ namespace mini_stl
     template<typename T>
     inline void destroy(T * p)
     {
+        // 保留内存，只析构对象，这是为了应对placement new的情况。因为delete同时执行析构对象和归还内存，所以这时候并不能直接delete，而是显式调用析构函数
         p->~T();
     }
     

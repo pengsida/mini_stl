@@ -15,7 +15,42 @@
 
 namespace mini_stl
 {
+    // swap
+    
+    template<typename ForwardIterator, typename T>
+    inline void __iter_swap(ForwardIterator a, ForwardIterator b, T*)
+    {
+        T tmp = *a;
+        *a = *b;
+        *b = tmp;
+    }
+    
+    template<typename ForwardIterator>
+    inline void iter_swap(ForwardIterator a, ForwardIterator b)
+    {
+        __iter_swap(a, b, __value_type(a));
+    }
+    
+    template<typename ForwardIterator>
+    inline ForwardIterator swap_range(ForwardIterator first, ForwardIterator last, ForwardIterator start)
+    {
+        for(; first != last; ++first, ++start)
+            iter_swap(first, start);
+        return start;
+    }
+    
+    template<typename T>
+    inline void swap(T& a, T& b)
+    {
+        T tmp = a;
+        a = b;
+        b = tmp;
+    }
+    
+    
+    /////////////////////////////////////////
     // distance
+    
     template<typename InputIterator, typename DistanceType>
     inline void __distance(InputIterator first, InputIterator last, DistanceType& n, input_iterator_tag)
     {

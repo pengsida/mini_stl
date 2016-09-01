@@ -14,6 +14,8 @@ using namespace std;
 
 int main()
 {
-    vector<int> test(1);
+    vector<int> test;
+    test.insert(test.begin(), 5, 5);
+    cout << *(++test.begin()) << endl;
     return 0;
 }

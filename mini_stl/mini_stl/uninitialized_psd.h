@@ -50,6 +50,32 @@ namespace mini_stl
     ///////////////////////////////////////
     // uninitialized_fill
     
+    template<typename ForwardIterator, typename T>
+    inline void __uninitialized_fill_aux(ForwardIterator first, ForwardIterator last, const T& value, true_type)
+    {
+        fill(first, last, value);
+    }
+    
+    template<typename ForwardIterator, typename T>
+    inline void __uninitialized_fill_axu(ForwardIterator first, ForwardIterator last, const T& value, false_type)
+    {
+        for(; first != last; ++first)
+            construct(&*first, value);
+    }
+    
+    template<typename ForwardIterator, typename T, typename T_iterator>
+    inline void __uninitialized_fill(ForwardIterator first, ForwardIterator last, const T& value, T_iterator*)
+    {
+        typedef typename type_traits<T_iterator>::is_POD_type is_POD;
+        __uninitialized_fill_aux(first, last, value, is_POD());
+    }
+    
+    template<typename ForwardIterator, typename T>
+    inline void uninitialized_fill(ForwardIterator first, ForwardIterator last, const T& value)
+    {
+        __uninitialized_fill(first, last, value, __value_type(first));
+    }
+    
     template<typename ForwardIterator, typename Size, typename T>
     inline ForwardIterator __uninitialized_fill_n_aux(ForwardIterator first, Size n, const T& value, true_type)
     {

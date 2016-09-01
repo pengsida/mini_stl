@@ -10,6 +10,12 @@
 #include "reverse_iterator_psd.h"
 #include "algorithm_psd.h"
 
+// vector完成
+// 留有一个疑问，怎么像标准vector库一样实现以下代码
+// mini_stl::vector<int> my_test;
+// my_test.insert(my_test.begin(), 5, 5);
+// cout << *(++my_test.begin()) << endl;
+
 namespace mini_stl
 {
     template<typename T, typename Alloc = alloc>
@@ -81,10 +87,11 @@ namespace mini_stl
         void push_back(const value_type& v);
         void pop_back();
         iterator insert(iterator position, const value_type& v);
+        iterator insert(iterator position, size_type n, const value_type& v);
         iterator insert(iterator position, const_iterator first, const_iterator last);
         iterator erase(iterator position);
         iterator erase(iterator first, iterator last);
-        void swap();
+        void swap(self& rhs);
         void clear();
     };
     
@@ -247,7 +254,7 @@ namespace mini_stl
     {
         if(capacity() < n)
         {
-            iterator new_start = data_allocator::allocate(n);
+            iterator new_start = data_allocator::allocate(capacity()*2 > n ? capacity()*2 : n);
             iterator new_finish = uninitialized_copy(begin(), end(), new_start);
             destroy(begin(), end());
             data_allocator::deallocate(start, capacity());
@@ -296,13 +303,13 @@ namespace mini_stl
     template<typename T, typename Alloc>
     typename vector<T,Alloc>::reference vector<T,Alloc>::back()
     {
-        return *--end();
+        return *(end() - 1);
     }
     
     template<typename T, typename Alloc>
     typename vector<T,Alloc>::const_reference vector<T,Alloc>::back() const
     {
-        return *--end();
+        return *(end() - 1);
     }
     
     template<typename T, typename Alloc>
@@ -340,6 +347,49 @@ namespace mini_stl
         return position;
     }
     
+    template<typename T, typename Alloc>
+    typename vector<T,Alloc>::iterator vector<T,Alloc>::insert(iterator position, size_type num_insert, const value_type& v)
+    {
+        if(num_insert != 0)
+        {
+            if(size_type(end_of_storage - finish) >= num_insert)
+            {
+                const size_type elem_after_pos = finish - position;
+                if(elem_after_pos < num_insert)
+                {
+                    uninitialized_copy(position, end(), position + num_insert);
+                    finish += num_insert;
+                    fill(position, position + elem_after_pos, v);
+                    uninitialized_fill(position + elem_after_pos, position + num_insert, v);
+                }
+                else
+                {
+                    uninitialized_copy(finish - num_insert, finish, finish);
+                    copy_backward(position, finish - num_insert, finish);
+                    finish += num_insert;
+                    fill(position, position + num_insert, v);
+                }
+            }
+            else
+            {
+                const size_type old_size = size();
+                const size_type new_capacity = old_size > num_insert ? old_size * 2 : old_size + num_insert;
+                const size_type pos = position - begin();
+                pointer new_start = data_allocator::allocate(new_capacity);
+                pointer new_finish = uninitialized_copy(begin(), position, new_start);
+                new_finish = uninitialized_fill_n(new_finish, num_insert, v);
+                new_finish = uninitialized_copy(position, end(), new_finish);
+                destroy(start, finish);
+                data_allocator::deallocate(start, end_of_storage - start);
+                start = new_start;
+                finish = new_finish;
+                end_of_storage = start + new_capacity;
+                position = begin() + pos;
+            }
+        }
+        return position;
+    }
+    
     // 在position处插入[first, last)的元素
     template<typename T, typename Alloc>
     typename vector<T,Alloc>::iterator vector<T,Alloc>::insert(iterator position, const_iterator first, const_iterator last)
@@ -351,7 +401,6 @@ namespace mini_stl
             if(size_type(end_of_storage - finish) >= num_insert)
             {
                 const size_type elem_after_pos = finish - position;
-                iterator old_finish = finish;
                 if(elem_after_pos < num_insert)
                 {
                     uninitialized_copy(position, end(), position + num_insert);
@@ -361,15 +410,33 @@ namespace mini_stl
                 }
                 else
                 {
+                    iterator old_finish = finish;
                     uninitialized_copy(finish - num_insert, finish, finish);
+                    copy_backward(position, finish - num_insert, finish);
                     finish += num_insert;
-                    copy_backward(position, old_finish - num_insert, old_finish);
                     copy(first, last, position);
                 }
             }
             else
             {
-                
+//                size_type pos = position - begin();
+//                reserve(capacity() + num_insert);
+//                position = begin() + pos;
+//                return insert(position, first, last);
+                // 上面的代码虽然比较取巧，为了考虑效率，决定用下面的方式实现
+                const size_type old_size = size();
+                const size_type pos = position - begin();
+                const size_type new_capacity = old_size > num_insert ? old_size * 2 : old_size + num_insert;
+                pointer new_start = data_allocator::allocate(new_capacity);
+                pointer new_finish = uninitialized_copy(begin(), position, new_start);
+                new_finish = uninitialized_copy(first, last, new_finish);
+                new_finish = uninitialized_copy(position, end(), new_finish);
+                destroy(start, finish);
+                data_allocator::deallocate(start, end_of_storage - start);
+                start = new_start;
+                finish = new_finish;
+                end_of_storage = new_start + new_capacity;
+                position = begin() + pos;
             }
         }
         return position;
@@ -395,14 +462,17 @@ namespace mini_stl
     }
     
     template<typename T, typename Alloc>
-    void vector<T,Alloc>::swap()
+    void vector<T,Alloc>::swap(self& rhs)
     {
-        //...
+        swap(start, rhs.start);
+        swap(finish, rhs.finish);
+        swap(end_of_storage, rhs.end_of_storage);
     }
     
+    // Removes all elements from the container
     template<typename T, typename Alloc>
     void vector<T,Alloc>::clear()
     {
-        
+        destroy(start, finish);
     }
 }
