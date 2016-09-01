@@ -9,17 +9,9 @@
 #ifndef construct_psd_h
 #define construct_psd_h
 
-#ifndef _LIBCPP_NEW
 #include <new>
-#endif
-
-#ifndef iterator_traits_psd_h
 #include "iterator_traits_psd.h"
-#endif
-
-#ifndef type_traits_psd_h
 #include "type_traits_psd.h"
-#endif
 
 namespace mini_stl
 {
@@ -37,6 +29,7 @@ namespace mini_stl
         new ((void*)p) T1();
     }
     
+    // 我写string类的时候突然想到，POD型的对象是否有析构函数，如 int
     template<typename T>
     inline void destroy(T * p)
     {

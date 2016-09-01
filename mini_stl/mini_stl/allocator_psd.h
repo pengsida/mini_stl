@@ -9,21 +9,10 @@
 #ifndef allocator_psd_h
 #define allocator_psd_h
 
-#ifndef alloc_psd_h
 #include "alloc_psd.h"
-#endif
-
-#ifndef alloc_default_psd_h
 #include "alloc_default_psd.h"
-#endif
-
-#ifndef construct_psd_h
 #include "construct_psd.h"
-#endif
-
-#ifndef uninitialized_psd_h
 #include "uninitialized_psd.h"
-#endif
 
 namespace mini_stl
 {

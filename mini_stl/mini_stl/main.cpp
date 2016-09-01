@@ -7,15 +7,13 @@
 //
 
 #include <iostream>
-#include "vector_psd.h"
-#include <vector>
+#include "string_psd.h"
+#include <string>
 
 using namespace std;
 
 int main()
 {
-    vector<int> test;
-    test.insert(test.begin(), 5, 5);
-    cout << *(++test.begin()) << endl;
+    mini_stl::string test;
     return 0;
 }

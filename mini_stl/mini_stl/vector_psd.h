@@ -50,6 +50,7 @@ namespace mini_stl
         explicit vector(size_type count, const value_type& value);
         explicit vector(size_type count);
         explicit vector(const self& rhs);
+        
         self& operator=(const self& rhs);
         
         // destructor
@@ -74,7 +75,7 @@ namespace mini_stl
         void reserve(size_type n);
         
         // Element access
-        reference operator[](size_type index);
+        reference operator[](size_type index);  // 后面没带const只是为了函数重载
         const_reference operator[](size_type index) const;
         reference at(size_type index);
         const_reference at(size_type index) const;
@@ -228,7 +229,7 @@ namespace mini_stl
     void vector<T,Alloc>::resize(size_type new_sz, const value_type& value)
     {
         if(new_sz > capacity())
-            reserve();
+            reserve(new_sz);
         if(new_sz > size())
             uninitialized_fill_n(finish, new_sz - size(), value);
         else
@@ -474,5 +475,6 @@ namespace mini_stl
     void vector<T,Alloc>::clear()
     {
         destroy(start, finish);
+        finish = start;
     }
 }
