@@ -22,6 +22,8 @@
 //为了合乎string针对字符串的一般用法，我先定义basic_string类
 //然后 typedef basic_string<char> string
 
+// 函数参数中的pos都是指*this中的位置
+
 namespace mini_stl
 {
     template<typename T>
@@ -99,14 +101,14 @@ namespace mini_stl
         self& operator+=(value_type c);
         
         self& append(const self& rhs);
-        self& append(const self& rhs, size_type start_pos, size_type len);
+        self& append(const self& rhs, size_type start_pos, size_type len = npos);
         self& append(const value_type* s);
-        self& append(const value_type* s, size_t n);
+        self& append(const value_type* s, size_type n);
         self& append(size_type n, value_type c);
         template<typename InputIterator>
         self& append(InputIterator first, InputIterator last);
         
-        void push_back(const value_type c);
+        void push_back(value_type c);
         
         // Assigns a new value to the string, replacing its current contents.
         self& assign(const self& rhs);
@@ -117,15 +119,15 @@ namespace mini_stl
         template<typename InputIterator>
         self& assign(InputIterator first, InputIterator last);
         
-        self& insert(size_type pos, const self& str);
-        self& insert(size_type pos, const self& str, size_type insert_pos, size_type len);
+        self& insert(size_type pos, const self& rhs);
+        self& insert(size_type pos, const self& rhs, size_type start_pos, size_type len = npos);
         self& insert(size_type pos, const value_type* s);
-        self& insert(size_type pos, const value_type* s, size_type n);
+        self& insert(size_type pos, const value_type* s, size_type len);
         self& insert(size_type pos, size_type n, value_type c);
-        void insert(iterator position, size_type n, value_type c);
-        iterator insert(iterator position, value_type c);
+        self& insert(iterator position, size_type n, value_type c);
+        self& insert(iterator position, value_type c);
         template<typename InputIterator>
-        void insert(iterator position, InputIterator first, InputIterator last);
+        self& insert(iterator position, InputIterator first, InputIterator last);
         
         self& erase(size_type pos, size_type len);
         iterator erase(iterator position);
@@ -406,6 +408,7 @@ namespace mini_stl
         return *this += rhs;
     }
     
+    // start_pos是rhs开始append的位置
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::append(const self& rhs, size_type start_pos, size_type len)
     {
@@ -421,7 +424,237 @@ namespace mini_stl
                 finish = uninitialized_copy(first, last, finish);
             else
             {
+                reserve((end_of_storage - start) + (last - first));
+                finish = uninitialized_copy(first, last, finish);
+            }
+        }
+        return *this;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::append(const value_type* s)
+    {
+        //...
+        return *this;
+    }
+    
+    // const value_type* s表示s是一个指针，它指向const value_type
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::append(const value_type* s, size_type n)
+    {
+        //...
+        return *this;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::append(size_type n, value_type c)
+    {
+        if((end_of_storage - finish) >= n)
+            finish = uninitialized_fill_n(finish, n, c);
+        else
+        {
+            reserve((end_of_storage - start) + n);
+            finish = uninitialized_fill_n(finish, n, c);
+        }
+        return *this;
+    }
+    
+    // 以下函数实现方式要求InputIterator是random_access_iterator
+    template<typename T>
+    template<typename InputIterator>
+    typename basic_string<T>::self& basic_string<T>::append(InputIterator first, InputIterator last)
+    {
+        if((end_of_storage - finish) >= (last - first))
+            finish = uninitialized_copy(first, last, finish);
+        else
+        {
+            reserve((end_of_storage - start) + (last - first));
+            finish = uninitialized_copy(first, last, finish);
+        }
+        return *this;
+    }
+    
+    template<typename T>
+    void basic_string<T>::push_back(value_type c)
+    {
+        *this += c;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::assign(const self& rhs)
+    {
+        clear();
+        return append(rhs);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::assign(const self& rhs, size_type start_pos, size_type len)
+    {
+        clear();
+        return append(rhs, start_pos, len);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::assign(const value_type* s)
+    {
+        clear();
+        return append(s);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::assign(const value_type* s, size_type n)
+    {
+        clear();
+        return append(s, n);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::assign(size_type n, value_type c)
+    {
+        clear();
+        return append(n, c);
+    }
+    
+    template<typename T>
+    template<typename InputIterator>
+    typename basic_string<T>::self& basic_string<T>::assign(InputIterator first, InputIterator last)
+    {
+        clear();
+        return append(first, last);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::insert(size_type pos, const self& rhs)
+    {
+//        const size_type num_insert = rhs.size();
+//        if((end_of_storage - finish) >= num_insert)
+//        {
+//            const size_type elem_after_pos = finish - (start + pos);
+//            if(elem_after_pos > num_insert)
+//            {
+//                uninitialized_copy(finish - num_insert, finish, finish);
+//                copy_backward(start + pos, finish - num_insert, finish);
+//                finish += num_insert;
+//                copy(rhs.start, rhs.finish, start + pos);
+//            }
+//            else
+//            {
+//                uninitialized_copy(start + pos, finish, start + pos + num_insert);
+//                finish += num_insert;
+//                copy(rhs.start, rhs.start + elem_after_pos, start + pos);
+//                uninitialized_copy(rhs.start + elem_after_pos, rhs.finish, finish);
+//            }
+//        }
+//        else
+//        {
+//            const size_type old_capacity = capacity();
+//            const size_type new_capacity = old_capacity > num_insert ? old_capacity * 2 : old_capacity + num_insert;
+//            pointer new_start = data_allocator::allocate(new_capacity);
+//            pointer new_finish = uninitialized_copy(start, start + pos, new_start);
+//            new_finish = uninitialized_copy(rhs.start, rhs.finish, new_finish);
+//            new_finish = uninitialized_copy(start + pos, finish, new_finish);
+//            destroy(start, finish);
+//            data_allocator::deallocate(start, end_of_storage - start);
+//            start = new_start;
+//            finish = new_finish;
+//            end_of_storage = start + new_capacity;
+//        }
+//        return *this;
+        
+        // 写完上面代码以后，我发现可以利用insert(iterator position, InputIterator first, InputIterator last)来实现，而且很多insert函数都可以利用这个函数实现
+        return insert(start + pos, rhs.start, rhs.finish);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::insert(size_type pos, const self& rhs, size_type start_pos, size_type len)
+    {
+        if(start_pos < rhs.size())
+        {
+            pointer first = rhs.start + start_pos;
+            pointer last;
+            if(len > (rhs.finish - first) || len == npos)
+                last = rhs.finish;
+            else
+                last = first + len;
+            return insert(start + pos, first, last);
+        }
+        return *this;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::insert(size_type pos, const value_type* s)
+    {
+        //...
+        return *this;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::insert(size_type pos, const value_type* s, size_type len)
+    {
+        //...
+        return *this;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::insert(size_type pos, size_type n, value_type c)
+    {
+        
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::insert(iterator position, size_type n, value_type c)
+    {
+        if(n != 0)
+        {
+            if((end_of_storage - finish) >= n)
+            {
                 
+            }
+            else
+            {
+                
+            }
+        }
+    }
+    
+    template<typename T>
+    template<typename InputIterator>
+    typename basic_string<T>::self& basic_string<T>::insert(iterator position, InputIterator first, InputIterator last)
+    {
+        if(last != first)
+        {
+            const size_type num_insert = last - first;
+            if((end_of_storage - finish) >= num_insert)
+            {
+                const size_type elem_after_pos = finish - position;
+                if(elem_after_pos > num_insert)
+                {
+                    uninitialized_copy(finish - num_insert, finish, finish);
+                    copy_backward(position, finish - num_insert, finish);
+                    finish += num_insert;
+                    copy(first, last, position);
+                }
+                else
+                {
+                    uninitialized_copy(position, finish, position + num_insert);
+                    finish += num_insert;
+                    copy(first, first + elem_after_pos, position);
+                    uninitialized_copy(first + elem_after_pos, last, finish);
+                }
+            }
+            else
+            {
+                const size_type old_capacity = capacity();
+                const size_type new_capacity = old_capacity > num_insert ? old_capacity * 2 : old_capacity + num_insert;
+                pointer new_start = data_allocator::allocate(new_capacity);
+                pointer new_finish = uninitialized_copy(start, position, new_start);
+                new_finish = uninitialized_copy(first, last, new_finish);
+                new_finish = uninitialized_copy(position, finish, new_finish);
+                destroy(start, finish);
+                data_allocator::deallocate(start, end_of_storage - start);
+                start = new_start;
+                finish = new_finish;
+                end_of_storage = start + new_capacity;
             }
         }
         return *this;

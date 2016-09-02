@@ -100,7 +100,7 @@ namespace mini_stl
     /////////////////////////////////////
     // copy_backward
     
-    // [first, last)
+    // [first, last), 复制到[end-(last - first), end)
     template<typename InputIterator, typename BackwardIterator>
     inline BackwardIterator copy_backward(InputIterator first, InputIterator last, BackwardIterator end)
     {
