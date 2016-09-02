@@ -455,10 +455,13 @@ namespace mini_stl
     template<typename T, typename Alloc>
     typename vector<T,Alloc>::iterator vector<T,Alloc>::erase(iterator first, iterator last)
     {
-        size_type len = last - first;
-        iterator position = copy(last, end(), first);
-        destroy(position, end());
-        finish = finish - len;
+        if(last != first)
+        {
+            const size_type len = last - first;
+            iterator position = copy(last, end(), first);
+            destroy(position, end());
+            finish = finish - len;
+        }
         return first;
     }
     

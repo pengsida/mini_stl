@@ -129,14 +129,14 @@ namespace mini_stl
         template<typename InputIterator>
         self& insert(iterator position, InputIterator first, InputIterator last);
         
-        self& erase(size_type pos, size_type len);
+        iterator erase(size_type pos, size_type len = npos);
         iterator erase(iterator position);
         iterator erase(iterator first, iterator last);
         
         // Replaces the portion of the string that begins at character pos and spans len characters (or the part of the string in the range between [first,last)) by new contents
-        self& replace(size_type pos, size_type len, const self& str);
-        self& replace(iterator first, iterator last, const self& str);
-        self& replace(size_type pos, size_type len, const self& str, size_type replace_pos, size_type replace_len);
+        self& replace(size_type pos, size_type len, const self& rhs);
+        self& replace(iterator first, iterator last, const self& rhs);
+        self& replace(size_type pos, size_type len, const self& rhs, size_type start_pos, size_type replace_len);
         self& replace(size_type pos, size_type len, const value_type* s);
         self& replace(iterator first, iterator last, const value_type* s);
         self& replace(size_type pos, size_type len, const value_type* s, size_type replace_len);
@@ -152,10 +152,8 @@ namespace mini_stl
         //////////////////////////////////////////////////////////////
         // String operations
         const char* c_str() const;
-        
         const char* data() const;
-        
-        size_type copy(char* s, size_type len, size_type pos = 0);
+        size_type copy(char* dest, size_type len, size_type pos = 0);
         
         // searching range: [pos, end)
         size_type find(const self& str, size_type pos) const;
@@ -371,6 +369,12 @@ namespace mini_stl
         return *start;
     }
     
+    
+    
+    
+    //////////////////////////////////////////
+    // operator+=()
+    
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::operator+=(const self& rhs)
     {
@@ -407,6 +411,12 @@ namespace mini_stl
     {
         return *this += rhs;
     }
+    
+    
+    
+    
+    ////////////////////////////////////
+    // append
     
     // start_pos是rhs开始append的位置
     template<typename T>
@@ -480,6 +490,12 @@ namespace mini_stl
         *this += c;
     }
     
+    
+    
+    
+    ///////////////////////////////////////
+    // assign
+    
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::assign(const self& rhs)
     {
@@ -522,6 +538,12 @@ namespace mini_stl
         clear();
         return append(first, last);
     }
+    
+    
+    
+    
+    //////////////////////////////////////////////
+    // insert
     
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::insert(size_type pos, const self& rhs)
@@ -598,7 +620,7 @@ namespace mini_stl
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::insert(size_type pos, size_type n, value_type c)
     {
-        
+        return insert(start + pos, n, c);
     }
     
     template<typename T>
@@ -608,13 +630,44 @@ namespace mini_stl
         {
             if((end_of_storage - finish) >= n)
             {
-                
+                const size_type elem_after_pos = finish - position;
+                if(elem_after_pos > n)
+                {
+                    uninitialized_copy(finish - n, finish, finish);
+                    copy_backward(position, finish - n, finish);
+                    finish += n;
+                    fill_n(position, n, c);
+                }
+                else
+                {
+                    uninitialized_copy(position, finish, position + n);
+                    finish += n;
+                    fill(position, finish, c);
+                    uninitialized_fill(finish, position + n, c);
+                }
             }
             else
             {
-                
+                const size_type old_capacity = capacity();
+                const size_type new_capacity = old_capacity > n ? old_capacity * 2 : old_capacity + n;
+                pointer new_start = data_allocator::allocate(new_capacity);
+                pointer new_finish = uninitialized_copy(start, position, new_start);
+                new_finish = uninitialized_fill_n(new_finish, n, c);
+                new_finish = uninitialized_copy(position, finish, new_finish);
+                destroy(start, finish);
+                data_allocator::deallocate(start, end_of_storage - start);
+                start = new_start;
+                finish = new_finish;
+                end_of_storage = start + new_capacity;
             }
         }
+        return *this;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::insert(iterator position, value_type c)
+    {
+        return insert(position, 1, c);
     }
     
     template<typename T>
@@ -659,6 +712,166 @@ namespace mini_stl
         }
         return *this;
     }
+    
+    
+    
+    
+    
+    ///////////////////////////////////////////
+    // erase
+    
+    template<typename T>
+    typename basic_string<T>::iterator basic_string<T>::erase(size_type pos, size_type len)
+    {
+        if(pos < size())
+        {
+            pointer first = start + pos;
+            pointer last;
+            if(len > (finish - first) || len == npos)
+                last = finish;
+            else
+                last = first + len;
+            return erase(first, last);
+        }
+        return *this;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::iterator basic_string<T>::erase(iterator position)
+    {
+        return erase(position, position + 1);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::iterator basic_string<T>::erase(iterator first, iterator last)
+    {
+        const size_type pos = first - start;
+        if(last != first)
+        {
+            const size_type len = last - first;
+            pointer position = copy(last, finish, first);
+            destroy(position, finish);
+            finish -= len;
+        }
+        return start + pos;
+    }
+    
+    
+    
+    
+    
+    
+    /////////////////////////////////////////////
+    // replace
+    
+    // 以下replace函数的实现方式虽然重复利用了代码，可是没有充分考虑效率
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::replace(size_type pos, size_type len, const self& rhs)
+    {
+        erase(pos, len);
+        return insert(pos, rhs);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::replace(iterator first, iterator last, const self& rhs)
+    {
+        iterator position = erase(first, last);
+        return insert(position - start, rhs);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::replace(size_type pos, size_type len, const self& rhs, size_type start_pos, size_type replace_len)
+    {
+        erase(pos, len);
+        return insert(start + pos, rhs.start + start_pos, rhs.start + start_pos + replace_len);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::replace(size_type pos, size_type len, const value_type* s)
+    {
+        erase(pos, len);
+        return insert(pos, s);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::replace(iterator first, iterator last, const value_type* s)
+    {
+        iterator position = erase(first, last);
+        return insert(position - start, s);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::replace(size_type pos, size_type len, const value_type* s, size_type replace_len)
+    {
+        erase(pos, len);
+        return insert(pos, s, replace_len);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::replace(iterator first, iterator last, const value_type* s, size_type replace_len)
+    {
+        iterator position = erase(first, last);
+        return insert(position - start, s, replace_len);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::replace(size_type pos, size_type len, size_type replace_len, value_type c)
+    {
+        erase(pos, len);
+        return insert(pos, replace_len, c);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::replace(iterator first, iterator last, size_type replace_len, value_type c)
+    {
+        iterator position = erase(first, last);
+        return insert(position - start, replace_len, c);
+    }
+    
+    template<typename T>
+    template<typename InputIterator>
+    typename basic_string<T>::self& basic_string<T>::replace(iterator first, iterator last, InputIterator replace_first, InputIterator replace_last)
+    {
+        iterator position = erase(first, last);
+        return insert(position, replace_first, replace_last);
+    }
+    
+    
+    
+    
+    
+    
+    template<typename T>
+    void basic_string<T>::swap(self& rhs)
+    {
+        swap(start, rhs.start);
+        swap(finish, rhs.finish);
+        swap(end_of_storage, rhs.end_of_storage);
+    }
+    
+    template<typename T>
+    void basic_string<T>::pop_back()
+    {
+        if(finish != start)
+        {
+            --finish;
+            destroy(finish);
+        }
+    }
+    
+    
+    
+    
+    ////////////////////////////////////////////
+    // string operations
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::copy(char* dest, size_type len, size_type pos)
+    {
+        //...
+        return len;
+    }
+    
     
     typedef basic_string<char> string;
     
