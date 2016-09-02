@@ -64,6 +64,53 @@ namespace mini_stl
         typedef typename iterator_traits<Iterator>::iterator_category category;
         return category();
     }
+    
+    template<typename InputIterator, typename difference_type>
+    inline void __advance(InputIterator& itr, difference_type n, forward_iterator_tag)
+    {
+        while(n--)
+            ++itr;
+    }
+    
+    template<typename InputIterator, typename difference_type>
+    inline void __advance(InputIterator& itr, difference_type n, bidirectional_iterator_tag)
+    {
+        if(n > 0)
+            while(n--)
+                ++itr;
+        else
+            while(n++)
+                --itr;
+    }
+    
+    template<typename InputIterator, typename difference_type>
+    inline void __advance(InputIterator& itr, difference_type n, random_access_iterator_tag)
+    {
+        itr += n;
+    }
+    
+    template<typename InputIterator, typename difference_type>
+    inline void advance(InputIterator& itr, difference_type n)
+    {
+        __advance(itr, n, iterator_category(itr));
+    }
 }
 
 #endif /* iterator_traits_psd_h */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -34,6 +34,8 @@ namespace mini_stl
         explicit reverse_iterator(const Iterator& rhs);
         explicit reverse_iterator(const self& rhs);
         
+        Iterator base() const;
+        
 //        Returns a reference or pointer to the element previous to current.
         reference operator*() const;
         pointer operator->() const;
@@ -76,6 +78,12 @@ namespace mini_stl
     reverse_iterator<Iterator>::reverse_iterator(const self& rhs)
     :cur_pos(rhs.cur_pos)
     {
+    }
+    
+    template<typename Iterator>
+    Iterator reverse_iterator<Iterator>::base() const
+    {
+        return cur_pos;
     }
     
     template<typename Iterator>

@@ -11,6 +11,7 @@
 
 #include "type_traits_psd.h"
 #include "iterator_traits_psd.h"
+#include "reverse_iterator_psd.h"
 #include <cstring>
 
 namespace mini_stl
@@ -99,6 +100,58 @@ namespace mini_stl
     
     
     
+    
+    
+    
+    /////////////////////////////////////////////
+    // find_end
+    
+    template<typename SearchedIterator, typename InputIterator>
+    inline SearchedIterator __find_end(SearchedIterator first1, SearchedIterator last1, InputIterator first2, InputIterator last2, forward_iterator_tag, forward_iterator_tag)
+    {
+        if(first1 == last1 || first2 == last2)
+            return last1;
+        else
+        {
+            SearchedIterator result = last1;
+            while(1)
+            {
+                SearchedIterator new_result = search(first1, last1, first2, last2);
+                if(new_result == last1)
+                    return result;
+                else
+                {
+                    result = new_result;
+                    first1 = new_result;
+                    ++first1;
+                }
+            }
+        }
+    }
+    
+    template<typename SearchedIterator, typename InputIterator>
+    inline SearchedIterator __find_end(SearchedIterator first1, SearchedIterator last1, InputIterator first2, InputIterator last2, bidirectional_iterator_tag, bidirectional_iterator_tag)
+    {
+        typedef reverse_iterator<SearchedIterator> RevSearchedIterator;
+        typedef reverse_iterator<InputIterator> RevInputIterator;
+        RevSearchedIterator rlast1(first1);
+        RevInputIterator rlast2(first2);
+        RevSearchedIterator r_reuslt = search(RevSearchedIterator(last1), rlast1, RevInputIterator(last2), rlast2);
+        if(r_reuslt == rlast1)
+            return last1;
+        else
+        {
+            SearchedIterator result = r_reuslt.base();
+            advance(result, -(last2 - first2));
+            return result;
+        }
+    }
+    
+    template<typename SearchedIterator, typename InputIterator>
+    inline SearchedIterator find_end(SearchedIterator first1, SearchedIterator last1, InputIterator first2, InputIterator last2)
+    {
+        return __find_end(first1, last1, first2, last2, iterator_category(first1), iterator_category(first2));
+    }
     
     
     /////////////////////////////////////////////

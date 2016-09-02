@@ -24,8 +24,7 @@ static size_t length(const _CharT* __s) {
 
 int main()
 {
-    const char* str = "ad\0d";
-    if(str[2] == char())
-        cout << "hello world" << endl;
+    string test;
+    cout << mini_stl::string::npos << endl;
     return 0;
 }

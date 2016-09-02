@@ -47,10 +47,12 @@ namespace mini_stl
         typedef ptrdiff_t difference_type;
         typedef size_t size_type;
         
+    public:
+        static const size_type npos;
+        
     private:
         typedef allocator<T, alloc> data_allocator;
         typedef basic_string<T> self;
-        static const size_type npos;
         pointer start;
         pointer finish;
         pointer end_of_storage;
@@ -170,11 +172,12 @@ namespace mini_stl
         size_type find(value_type c, size_type pos = 0) const;
         
         // searching range: (0, pos]
-        size_type rfind(const self& rhs, size_type pos) const;
-        size_type rfind(const value_type* s, size_type pos) const;
+        size_type rfind(const self& rhs, size_type pos = npos) const;
+        size_type rfind(const value_type* s, size_type pos = npos) const;
         size_type rfind(const value_type* s, size_type pos, size_type len) const;
-        size_type rfind(value_type c, size_type pos) const;
+        size_type rfind(value_type c, size_type pos = npos) const;
         
+        // Finds the first character equal to one of the characters
         size_type find_first_of(const self& rhs, size_type pos = 0) const;
         size_type find_first_of(const value_type* s, size_type pos = 0) const;
         size_type find_first_of(const value_type* s, size_type pos, size_type len) const;
@@ -928,6 +931,82 @@ namespace mini_stl
             return result == finish ? npos : result - start;
         }
         return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::rfind(const self& rhs, size_type pos) const
+    {
+        if(pos != 0)
+        {
+            pointer last;
+            if(pos > size() || pos == npos)
+                last = finish;
+            else
+                last = start + pos;
+            pointer result = find_end(start, last, rhs.start, rhs.finish);
+            return result == finish ? npos : result - start;
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::rfind(const value_type* s, size_type pos) const
+    {
+        return rfind(s, pos, length_of_values(s));
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::rfind(const value_type* s, size_type pos, size_type len) const
+    {
+        if(pos != 0)
+        {
+            pointer last1;
+            if(pos > size() || pos == npos)
+                last1 = finish;
+            else
+                last1 = start + pos;
+            pointer last2;
+            const size_type s_len = length_of_values(s);
+            if(len > s_len)
+                last2 = s + s_len;
+            else
+                last2 = s + len;
+            pointer result = find_end(start, last1, s, last2);
+            return result == finish ? npos : result - start;
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::rfind(value_type c, size_type pos) const
+    {
+        if(pos != 0)
+        {
+            pointer last;
+            if(pos > size() || pos == npos)
+                last = finish;
+            else
+                last = start + pos;
+            reverse_iterator rlast = reverse_iterator(start);
+            reverse_iterator r_result = find(reverse_iterator(last), rlast, c);
+            if(r_result == rlast)
+                return npos;
+            else
+                return r_result.base() - start;
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_first_of(const self& rhs, size_type pos) const
+    {
+        return find(rhs, pos);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_first_of(const value_type* s, size_type pos) const
+    {
+        return find(s, pos);
     }
     
     typedef basic_string<char> string;
