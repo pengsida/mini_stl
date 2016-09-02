@@ -13,12 +13,19 @@
 
 using namespace std;
 
+template<typename _CharT>
+static size_t length(const _CharT* __s) {
+    const _CharT __nullchar = _CharT();
+    size_t __i;
+    for (__i = 0; __s[__i] != __nullchar; ++__i)
+    {}
+    return __i;
+}
+
 int main()
 {
-    char * c = mini_stl::allocator<char, mini_stl::alloc>::allocate(1);
-    mini_stl::construct(c,'a');
-    cout << "a" << c  << "a" << endl;
-    mini_stl::destroy(c);
-    cout << "a" << c  << "a" << endl;
+    const char* str = "ad\0d";
+    if(str[2] == char())
+        cout << "hello world" << endl;
     return 0;
 }

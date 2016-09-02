@@ -210,7 +210,7 @@ namespace mini_stl
     }
     
     template<typename Iterator>
-    inline typename iterator_traits<Iterator>::value_type* value_type(const reverse_iterator<Iterator>&)
+    inline typename iterator_traits<Iterator>::value_type* __value_type(const reverse_iterator<Iterator>&)
     {
         return static_cast<typename iterator_traits<Iterator>::value_type *>(0);
     }

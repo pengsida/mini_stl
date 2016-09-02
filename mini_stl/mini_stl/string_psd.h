@@ -15,6 +15,11 @@
 #include <istream>
 #include <ostream>
 
+//note
+
+//char* str = "str"; 这样是错的，因为"strad"是常量字符串，而str不是，会发生类型转换。
+//const char* str = "str"; 这样才对。
+
 //因为reverse_iterator在编译期间就需要确认构造函数类型
 //如果typedef reverse_iterator<char*> reverse_iterator的话，
 //reverse_iterator是没有相应的构造函数的
@@ -49,6 +54,9 @@ namespace mini_stl
         pointer start;
         pointer finish;
         pointer end_of_storage;
+        
+    private:
+        static size_type length_of_values(const value_type* s);
         
     public:
         // constructor
@@ -156,34 +164,34 @@ namespace mini_stl
         size_type copy(char* dest, size_type len, size_type pos = 0);
         
         // searching range: [pos, end)
-        size_type find(const self& str, size_type pos) const;
-        size_type find(const value_type* s, size_type pos) const;
-        size_type find(const value_type* s, size_type pos, size_type len);
-        size_type find(value_type c, size_type pos) const;
+        size_type find(const self& rhs, size_type pos = 0) const;
+        size_type find(const value_type* s, size_type pos = 0) const;
+        size_type find(const value_type* s, size_type pos, size_type len) const;
+        size_type find(value_type c, size_type pos = 0) const;
         
         // searching range: (0, pos]
-        size_type rfind(const self& str, size_type pos) const;
+        size_type rfind(const self& rhs, size_type pos) const;
         size_type rfind(const value_type* s, size_type pos) const;
         size_type rfind(const value_type* s, size_type pos, size_type len) const;
         size_type rfind(value_type c, size_type pos) const;
         
-        size_type find_first_of(const self& str, size_type pos = 0) const;
+        size_type find_first_of(const self& rhs, size_type pos = 0) const;
         size_type find_first_of(const value_type* s, size_type pos = 0) const;
         size_type find_first_of(const value_type* s, size_type pos, size_type len) const;
         size_type find_first_of(char c, size_type pos = 0) const;
         
         // Find character in string from the end
-        size_type find_last_of(const self& str, size_type pos = npos) const;
+        size_type find_last_of(const self& rhs, size_type pos = npos) const;
         size_type find_last_of(const value_type* s, size_type pos = npos) const;
         size_type find_last_of(const value_type* s, size_type pos, size_type len) const;
         size_type find_last_of(value_type c, size_type pos = npos) const;
         
-        size_type find_first_not_of(const self& str, size_type pos = 0) const;
+        size_type find_first_not_of(const self& rhs, size_type pos = 0) const;
         size_type find_first_not_of(const value_type* s, size_type pos = 0) const;
         size_type find_first_not_of(const value_type* s, size_type pos, size_type len) const;
         size_type find_first_not_of(value_type c, size_type pos = 0) const;
         
-        size_type find_last_not_of(const self& str, size_type pos = npos) const;
+        size_type find_last_not_of(const self& rhs, size_type pos = npos) const;
         size_type find_last_not_of(const value_type* s, size_type pos = npos) const;
         size_type find_last_not_of(const value_type* s, size_type pos, size_type len) const;
         size_type find_last_not_of(value_type c, size_type pos = npos) const;
@@ -200,6 +208,15 @@ namespace mini_stl
     
     template<typename T>
     const size_t basic_string<T>::npos = -1;
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::length_of_values(const value_type* s)
+    {
+        const value_type null = value_type();
+        size_type count;
+        for(count = 0; s[count] != null; ++count){}
+        return count;
+    }
     
     template<typename T>
     typename basic_string<T>::iterator basic_string<T>::begin()
@@ -862,6 +879,8 @@ namespace mini_stl
     
     
     
+    
+    
     ////////////////////////////////////////////
     // string operations
     
@@ -872,6 +891,44 @@ namespace mini_stl
         return len;
     }
     
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find(const self& rhs, size_type pos) const
+    {
+        if(pos < size())
+        {
+            iterator result = search(start + pos, finish, rhs.start, rhs.finish);
+            return (result == finish ? npos : result - start);
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find(const value_type* s, size_type pos) const
+    {
+        return find(s, pos, length_of_values(s));
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find(const value_type* s, size_type pos, size_type len) const
+    {
+        if(pos < size())
+        {
+            iterator result = search(start + pos, finish, s, s + len);
+            return result == finish ? npos : result - start;
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find(value_type c, size_type pos) const
+    {
+        if(pos < size())
+        {
+            iterator result = find(start + pos, finish, c);
+            return result == finish ? npos : result - start;
+        }
+        return npos;
+    }
     
     typedef basic_string<char> string;
     

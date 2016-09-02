@@ -15,6 +15,93 @@
 
 namespace mini_stl
 {
+    // find
+    
+    template<typename SearchedIterator, typename T>
+    inline SearchedIterator find(SearchedIterator first, SearchedIterator last, const T& value)
+    {
+        while(first != last && !(*first == value))
+            ++first;
+        return first;
+    }
+    
+    
+    
+    
+    
+    ///////////////////////////////////////////
+    // search
+    
+    // 以下函数只适用于forward_iterator类型的迭代器
+    // 要求SearchedIterator和InputIterator中的元素可以相比较
+    template<typename SearchedIterator, typename InputIterator>
+    SearchedIterator search(SearchedIterator first1, SearchedIterator last1, InputIterator first2, InputIterator last2)
+    {
+        if(first1 == last1 || first2 == last2)
+            return first1;
+        InputIterator tmp(first2);
+        ++tmp;
+        // 考虑所寻找的内容长度为1的情况
+        if(tmp == last2)
+            return find(first1, last1, *first2);
+        InputIterator second_input(first2);
+        ++second_input;
+        InputIterator cur_input;
+        SearchedIterator cur_search_pos(first1);
+        while(first1 != last1)
+        {
+            first1 = find(first1, last1, *first2);
+            if(first1 == last1)
+                return last1;
+            cur_input = second_input;
+            cur_search_pos = first1;
+            // 排除剩下的内容长度为1的情况
+            if(++cur_search_pos == last1)
+                return last1;
+            while(*cur_search_pos == *cur_input)
+            {
+                if(++cur_input == last2)
+                    return first1;
+                if(++cur_search_pos == last1)
+                    return last1;
+            }
+            ++first1;
+        }
+        return first1;
+    }
+    
+    template<typename SearchedIterator, typename Size, typename T>
+    SearchedIterator search_n(SearchedIterator first, SearchedIterator last, Size n, const T& value)
+    {
+        if(n <= 0)
+            return first;
+        else
+        {
+            first = find(first, last, value);
+            while(first != last)
+            {
+                Size count = n - 1;
+                SearchedIterator cur_pos(first);
+                ++cur_pos;
+                while(cur_pos != last && n != 0 && *cur_pos == value)
+                {
+                    ++cur_pos;
+                    --count;
+                }
+                if(count == 0)
+                    return first;
+                else
+                    first = find(cur_pos, last, value);
+            }
+            return last;
+        }
+    }
+    
+    
+    
+    
+    
+    /////////////////////////////////////////////
     // swap
     
     template<typename ForwardIterator, typename T>
