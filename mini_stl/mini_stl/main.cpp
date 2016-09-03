@@ -13,18 +13,22 @@
 
 using namespace std;
 
-template<typename _CharT>
-static size_t length(const _CharT* __s) {
-    const _CharT __nullchar = _CharT();
-    size_t __i;
-    for (__i = 0; __s[__i] != __nullchar; ++__i)
-    {}
-    return __i;
-}
+class A
+{
+private:
+    int te;
+public:
+    A():te(8){}
+    void cll(const A& test)
+    {
+        if(te == test.te)
+            cout << "hello world" << endl;
+    }
+};
 
 int main()
 {
-    string test;
-    cout << mini_stl::string::npos << endl;
+    string te(5,'d');
+    cout << te;
     return 0;
 }

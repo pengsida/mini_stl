@@ -12,10 +12,13 @@
 #include "allocator_psd.h"
 #include "reverse_iterator_psd.h"
 #include "algorithm_psd.h"
+#include <ctype.h>
 #include <istream>
 #include <ostream>
 
 //note
+
+//对operator>>的重载比较陌生，以后记得研究相应的源码
 
 //char* str = "str"; 这样是错的，因为"strad"是常量字符串，而str不是，会发生类型转换。
 //const char* str = "str"; 这样才对。
@@ -65,13 +68,15 @@ namespace mini_stl
         // constructor
         basic_string():start(0),finish(0),end_of_storage(0){}
         explicit basic_string(const self& rhs);
+        basic_string(size_type count, value_type c);
+        basic_string(const value_type* first, const value_type* last);
         
-        self& operator=(const self& rhs);
         self& operator=(const value_type* s);
-        self& operator=(char c);
+        self& operator=(const self& rhs);
+        self& operator=(value_type c);
         
         // destructor
-        ~basic_string(){}
+        ~basic_string();
         
         // Iterator
         iterator begin();
@@ -114,7 +119,7 @@ namespace mini_stl
         self& append(const self& rhs);
         self& append(const self& rhs, size_type start_pos, size_type len = npos);
         self& append(const value_type* s);
-        self& append(const value_type* s, size_type n);
+        self& append(const value_type* s, size_type n = npos);
         self& append(size_type n, value_type c);
         template<typename InputIterator>
         self& append(InputIterator first, InputIterator last);
@@ -162,8 +167,8 @@ namespace mini_stl
         
         //////////////////////////////////////////////////////////////
         // String operations
-        const char* c_str() const;
-        const char* data() const;
+        const value_type* c_str() const;
+        const value_type* data() const;
         size_type copy(char* dest, size_type len, size_type pos = 0);
         
         // searching range: [pos, end)
@@ -230,6 +235,58 @@ namespace mini_stl
             if(str1[i] != str2[i])
                 return str1[i] < str2[i] ? -1 : 1;
         return len1 == len2 ? 0 : (len1 < len2 ? -1 : 1);
+    }
+    
+    template<typename T>
+    basic_string<T>::basic_string(const self& rhs)
+    {
+        start = data_allocator::allocate(rhs.capacity());
+        end_of_storage = start + rhs.capacity();
+        finish = uninitialized_copy(rhs.begin(), rhs.end(), start);
+    }
+    
+    template<typename T>
+    basic_string<T>::basic_string(size_type count, value_type c)
+    {
+        start = data_allocator::allocate(count);
+        end_of_storage = start + count;
+        finish = uninitialized_fill_n(start, count, c);
+    }
+    
+    template<typename T>
+    basic_string<T>::basic_string(const value_type* first, const value_type* last)
+    {
+        const size_type sz = last - first;
+        start = data_allocator::allocate(sz);
+        end_of_storage = start + sz;
+        finish = uninitialized_copy(first, last, start);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::operator=(const value_type* s)
+    {
+        return assign(s);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::operator=(const self& rhs)
+    {
+        if(this != &rhs)
+            return assign(rhs.begin(), rhs.end());
+        return *this;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::operator=(value_type c)
+    {
+        return assign(1, c);
+    }
+    
+    template<typename T>
+    basic_string<T>::~basic_string()
+    {
+        destroy(start, finish);
+        data_allocator::deallocate(start, end_of_storage - start);
     }
     
     template<typename T>
@@ -423,8 +480,7 @@ namespace mini_stl
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::operator+=(const value_type* s)
     {
-        //...
-        return *this;
+        return append(s);
     }
     
     template<typename T>
@@ -475,16 +531,20 @@ namespace mini_stl
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::append(const value_type* s)
     {
-        //...
-        return *this;
+        return append(s, length_of_values(s));
     }
     
     // const value_type* s表示s是一个指针，它指向const value_type
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::append(const value_type* s, size_type n)
     {
-        //...
-        return *this;
+        const size_type s_len = length_of_values(s);
+        pointer last;
+        if(n > s_len || n == npos)
+            last = s + s_len;
+        else
+            last = s + n;
+        return append(s, last);
     }
     
     template<typename T>
@@ -615,7 +675,9 @@ namespace mini_stl
 //        return *this;
         
         // 写完上面代码以后，我发现可以利用insert(iterator position, InputIterator first, InputIterator last)来实现，而且很多insert函数都可以利用这个函数实现
-        return insert(start + pos, rhs.start, rhs.finish);
+        if(pos <= size())
+            return insert(start + pos, rhs.start, rhs.finish);
+        return *this;
     }
     
     template<typename T>
@@ -637,14 +699,24 @@ namespace mini_stl
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::insert(size_type pos, const value_type* s)
     {
-        //...
+        if(pos <= size())
+            return insert(start + pos, s, s + length_of_values(s));
         return *this;
     }
     
     template<typename T>
     typename basic_string<T>::self& basic_string<T>::insert(size_type pos, const value_type* s, size_type len)
     {
-        //...
+        if(pos <= size())
+        {
+            const size_type s_len = length_of_values(s);
+            pointer last;
+            if(len > s_len || len == npos)
+                last = s + s_len;
+            else
+                last = s + len;
+            return insert(start + pos, s, last);
+        }
         return *this;
     }
     
@@ -899,10 +971,27 @@ namespace mini_stl
     // string operations
     
     template<typename T>
+    const typename basic_string<T>::value_type* basic_string<T>::c_str() const
+    {
+        return start;
+    }
+    
+    template<typename T>
+    const typename basic_string<T>::value_type* basic_string<T>::data() const
+    {
+        return start;
+    }
+    
+    template<typename T>
     typename basic_string<T>::size_type basic_string<T>::copy(char* dest, size_type len, size_type pos)
     {
-        //...
-        return len;
+        const size_type sz = size();
+        if(pos < sz)
+        {
+            for(size_type i = 0; i < len && i < sz; ++i)
+                *(dest + i) = *(start + i);
+        }
+        return 0;
     }
     
     template<typename T>
@@ -1199,6 +1288,17 @@ namespace mini_stl
     template<typename T>
     typename basic_string<T>::self basic_string<T>::substr(size_type pos, size_type len) const
     {
+        if(pos < size())
+        {
+            pointer first = start + pos;
+            pointer last;
+            if(len > (finish - first) || len == npos)
+                last = finish;
+            else
+                last = first + len;
+            return basic_string<T>(first, last);
+        }
+        return basic_string<T>();
     }
     
     template<typename T>
@@ -1251,33 +1351,182 @@ namespace mini_stl
         return 0;
     }
     
-    typedef basic_string<char> string;
-    
     // Non-member function overloads
-    inline string operator+(const string& str1, const string& str2);
-    inline bool operator==(const string& lhs, const string& rhs);
-    inline bool operator==(const char* lhs, const string& rhs);
-    inline bool operator==(const string& lhs, const char* rhs);
-    inline bool operator!=(const string& lhs, const string& rhs);
-    inline bool operator!=(const char* lhs, const string& rhs);
-    inline bool operator!=(const string& lhs, const char* rhs);
-    inline bool operator<(const string& lhs, const char* rhs);
-    inline bool operator<(const char* lhs, const string& rhs);
-    inline bool operator<(const string& lhs, const char* rhs);
-    inline bool operator<=(const string& lhs, const string& rhs);
-    inline bool operator<=(const char* lhs, const string& rhs);
-    inline bool operator<=(const string& lhs, const char* rhs);
-    inline bool operator>(const string& lhs, const string& rhs);
-    inline bool operator>(const char* lhs, const string& rhs);
-    inline bool operator>(const string& lhs, const char* rhs);
-    inline bool operator>=(const string& lhs, const string& rhs);
-    inline bool operator>=(const char* lhs, const string& rhs);
-    inline bool operator>=(const string& lhs, const char* rhs);
-    inline void swap(string& lhs, string& rhs);
-    inline std::istream& operator>>(std::istream& is, string& str);
-    inline std::ostream& operator<<(std::ostream& os, const string& str);
-    inline std::istream& getline(std::istream& is, string& str, char delim);
-    inline std::istream& getline(std::istream& is, string& str);
+    template<typename T>
+    inline basic_string<T> operator+(const basic_string<T>& str1, const basic_string<T>& str2)
+    {
+        basic_string<T> result;
+        result.append(str1);
+        result.append(str2);
+        return result;
+    }
+    
+    template<typename T>
+    inline bool operator==(const basic_string<T>& lhs, const basic_string<T>& rhs)
+    {
+        return lhs.compare(rhs) == 0;
+    }
+    
+    template<typename T>
+    inline bool operator==(const char* lhs, const basic_string<T>& rhs)
+    {
+        return rhs.compare(lhs) == 0;
+    }
+    
+    template<typename T>
+    inline bool operator==(const basic_string<T>& lhs, const char* rhs)
+    {
+        return lhs.compare(rhs);
+    }
+    
+    template<typename T>
+    inline bool operator!=(const basic_string<T>& lhs, const basic_string<T>& rhs)
+    {
+        return !(lhs.compare(rhs) == 0);
+    }
+    
+    template<typename T>
+    inline bool operator!=(const char* lhs, const basic_string<T>& rhs)
+    {
+        return !(rhs.compare(lhs) == 0);
+    }
+    
+    template<typename T>
+    inline bool operator!=(const basic_string<T>& lhs, const char* rhs)
+    {
+        return !(lhs.compare(rhs) == 0);
+    }
+    
+    template<typename T>
+    inline bool operator<(const basic_string<T>& lhs, const basic_string<T>& rhs)
+    {
+        return lhs.compare(rhs) == -1;
+    }
+    
+    template<typename T>
+    inline bool operator<(const char* lhs, const basic_string<T>& rhs)
+    {
+        return rhs.compare(lhs) == 1;
+    }
+    
+    template<typename T>
+    inline bool operator<(const basic_string<T>& lhs, const char* rhs)
+    {
+        return lhs.compare(rhs) == -1;
+    }
+    
+    template<typename T>
+    inline bool operator>(const basic_string<T>& lhs, const basic_string<T>& rhs)
+    {
+        return lhs.compare(rhs) == 1;
+    }
+    
+    template<typename T>
+    inline bool operator>(const char* lhs, const basic_string<T>& rhs)
+    {
+        return rhs.compare(lhs) == -1;
+    }
+    
+    template<typename T>
+    inline bool operator>(const basic_string<T>& lhs, const char* rhs)
+    {
+        return lhs.compare(rhs) == 1;
+    }
+    
+    template<typename T>
+    inline bool operator<=(const basic_string<T>& lhs, const basic_string<T>& rhs)
+    {
+        return !(lhs > rhs);
+    }
+    
+    template<typename T>
+    inline bool operator<=(const char* lhs, const basic_string<T>& rhs)
+    {
+        return !(lhs > rhs);
+    }
+    
+    template<typename T>
+    inline bool operator<=(const basic_string<T>& lhs, const char* rhs)
+    {
+        return !(lhs > rhs);
+    }
+    
+    template<typename T>
+    inline bool operator>=(const basic_string<T>& lhs, const basic_string<T>& rhs)
+    {
+        return !(lhs < rhs);
+    }
+    
+    template<typename T>
+    inline bool operator>=(const char* lhs, const basic_string<T>& rhs)
+    {
+        return !(lhs < rhs);
+    }
+    
+    template<typename T>
+    inline bool operator>=(const basic_string<T>& lhs, const char* rhs)
+    {
+        return !(lhs < rhs);
+    }
+    
+    template<typename T>
+    inline void swap(basic_string<T>& lhs, basic_string<T>& rhs)
+    {
+        lhs.swap(rhs);
+    }
+    
+    template<typename T>
+    inline std::istream& operator>>(std::istream& is, basic_string<T>& rhs)
+    {
+        char ch;
+        while(is.get(ch))
+        {
+            if(!(isblank(ch) || ch == '\n'))
+                break;
+        }
+        is.putback(ch);
+        rhs.clear();
+        while(is.get(ch))
+        {
+            if(ch != EOF && !isblank(ch) && ch != '\n')
+                rhs.pushback(ch);
+            else
+                break;
+        }
+        return is;
+    }
+    
+    template<typename T>
+    inline std::ostream& operator<<(std::ostream& os, const basic_string<T>& rhs)
+    {
+        typename basic_string<T>::iterator last = rhs.end();
+        for(typename basic_string<T>::iterator itr = rhs.begin(); itr != last; ++itr)
+            os << *itr;
+        return os;
+    }
+    
+    template<typename T>
+    inline std::istream& getline(std::istream& is, basic_string<T>& rhs, char delim)
+    {
+        char ch;
+        rhs.clear();
+        while(is.get(ch))
+        {
+            if(ch != delim)
+                rhs.pushback(ch);
+            else
+                break;
+        }
+        return is;
+    }
+    
+    template<typename T>
+    inline std::istream& getline(std::istream& is, basic_string<T>& rhs)
+    {
+        return getline(is, rhs, '\n');
+    }
+    
+    typedef basic_string<char> string;
 }
 
 #endif /* string_psd_h */
