@@ -18,22 +18,34 @@
 
 //note
 
+//写substr函数的时候产生了一个疑问
+//函数返回值是临时变量时，返回类一定会是隐式转换吗，要怎样改成显式转换
+//本来我拷贝构造函数为explicit basic_string(const self& rhs);
+//然而这样是substr函数的编译是通不过的，需要允许隐式的拷贝构造函数才行
+
 //对operator>>的重载比较陌生，以后记得研究相应的源码
 
 //char* str = "str"; 这样是错的，因为"strad"是常量字符串，而str不是，会发生类型转换。
 //const char* str = "str"; 这样才对。
 
-//因为reverse_iterator在编译期间就需要确认构造函数类型
-//如果typedef reverse_iterator<char*> reverse_iterator的话，
-//reverse_iterator是没有相应的构造函数的
-//所以如果为了在string在使用reverse_iterator，就需要对string进行模板化
-//为了合乎string针对字符串的一般用法，我先定义basic_string类
-//然后 typedef basic_string<char> string
+//拷贝构造函数的参数如果是与类可转换的数据类型，需要在拷贝构造函数前加上explicit，以免发生两者之间的隐式转换。
 
-// 函数参数中的pos都是指*this中的位置
+//函数参数中的pos都是指*this中的位置
 
 namespace mini_stl
 {
+    class test
+    {
+    public:
+        typedef reverse_iterator<char*> reve;
+        
+        reve te()
+        {
+            reve te(0);
+            return te;
+        }
+    };
+    
     template<typename T>
     class basic_string
     {
@@ -67,9 +79,9 @@ namespace mini_stl
     public:
         // constructor
         basic_string():start(0),finish(0),end_of_storage(0){}
-        explicit basic_string(const self& rhs);
-        basic_string(size_type count, value_type c);
-        basic_string(const value_type* first, const value_type* last);
+        basic_string(const self& rhs);
+        explicit basic_string(size_type count, value_type c);
+        explicit basic_string(const value_type* first, const value_type* last);
         
         self& operator=(const value_type* s);
         self& operator=(const self& rhs);
@@ -119,7 +131,7 @@ namespace mini_stl
         self& append(const self& rhs);
         self& append(const self& rhs, size_type start_pos, size_type len = npos);
         self& append(const value_type* s);
-        self& append(const value_type* s, size_type n = npos);
+        self& append(const value_type* s, size_type n);
         self& append(size_type n, value_type c);
         template<typename InputIterator>
         self& append(InputIterator first, InputIterator last);
@@ -169,7 +181,7 @@ namespace mini_stl
         // String operations
         const value_type* c_str() const;
         const value_type* data() const;
-        size_type copy(char* dest, size_type len, size_type pos = 0);
+        size_type copy(char* dest, size_type len, size_type pos = 0) const;
         
         // searching range: [pos, end)
         size_type find(const self& rhs, size_type pos = 0) const;
@@ -242,7 +254,7 @@ namespace mini_stl
     {
         start = data_allocator::allocate(rhs.capacity());
         end_of_storage = start + rhs.capacity();
-        finish = uninitialized_copy(rhs.begin(), rhs.end(), start);
+        finish = uninitialized_copy(rhs.cbegin(), rhs.cend(), start);
     }
     
     template<typename T>
@@ -382,6 +394,7 @@ namespace mini_stl
     template<typename T>
     void basic_string<T>::reserve(size_type n)
     {
+        n = (n == 0 ? 1 : n);
         if(end_of_storage - start < n)
         {
             const size_type old_capacity = capacity();
@@ -493,17 +506,21 @@ namespace mini_stl
         return *this;
     }
     
-    template<typename T>
-    typename basic_string<T>::self& basic_string<T>::append(const self& rhs)
-    {
-        return *this += rhs;
-    }
+    
+    
+    
     
     
     
     
     ////////////////////////////////////
     // append
+    
+    template<typename T>
+    typename basic_string<T>::self& basic_string<T>::append(const self& rhs)
+    {
+        return *this += rhs;
+    }
     
     // start_pos是rhs开始append的位置
     template<typename T>
@@ -539,7 +556,7 @@ namespace mini_stl
     typename basic_string<T>::self& basic_string<T>::append(const value_type* s, size_type n)
     {
         const size_type s_len = length_of_values(s);
-        pointer last;
+        const_pointer last;
         if(n > s_len || n == npos)
             last = s + s_len;
         else
@@ -710,7 +727,7 @@ namespace mini_stl
         if(pos <= size())
         {
             const size_type s_len = length_of_values(s);
-            pointer last;
+            const_pointer last;
             if(len > s_len || len == npos)
                 last = s + s_len;
             else
@@ -836,7 +853,7 @@ namespace mini_stl
                 last = first + len;
             return erase(first, last);
         }
-        return *this;
+        return start + pos;
     }
     
     template<typename T>
@@ -852,7 +869,7 @@ namespace mini_stl
         if(last != first)
         {
             const size_type len = last - first;
-            pointer position = copy(last, finish, first);
+            pointer position = mini_stl::copy(last, finish, first);
             destroy(position, finish);
             finish -= len;
         }
@@ -983,7 +1000,7 @@ namespace mini_stl
     }
     
     template<typename T>
-    typename basic_string<T>::size_type basic_string<T>::copy(char* dest, size_type len, size_type pos)
+    typename basic_string<T>::size_type basic_string<T>::copy(char* dest, size_type len, size_type pos) const
     {
         const size_type sz = size();
         if(pos < sz)
@@ -1027,7 +1044,7 @@ namespace mini_stl
     {
         if(pos < size())
         {
-            iterator result = find(start + pos, finish, c);
+            iterator result = mini_stl::find(start + pos, finish, c);
             return result == finish ? npos : result - start;
         }
         return npos;
@@ -1065,7 +1082,7 @@ namespace mini_stl
                 last1 = finish;
             else
                 last1 = start + pos;
-            pointer last2;
+            const_pointer last2;
             const size_type s_len = length_of_values(s);
             if(len > s_len)
                 last2 = s + s_len;
@@ -1088,7 +1105,7 @@ namespace mini_stl
             else
                 last = start + pos;
             reverse_iterator rlast = reverse_iterator(start);
-            reverse_iterator r_result = find(reverse_iterator(last), rlast, c);
+            reverse_iterator r_result = mini_stl::find(reverse_iterator(last), rlast, c);
             if(r_result == rlast)
                 return npos;
             else
@@ -1120,7 +1137,7 @@ namespace mini_stl
         if(pos < size())
         {
             const size_type s_len = length_of_values(s);
-            pointer last;
+            const_pointer last;
             if(len > s_len || len == npos)
                 last = s + s_len;
             else
@@ -1160,11 +1177,11 @@ namespace mini_stl
             else
                 last1 = start + pos;
             const size_type s_len = length_of_values(s);
-            pointer last2;
+            const_pointer last2;
             if(len > s_len || len == npos)
-                last2 = finish;
+                last2 = s + s_len;
             else
-                last2 = start + len;
+                last2 = s + len;
             reverse_iterator r_result = find_first_of(reverse_iterator(last1), rend(), s, last2);
             return r_result == rend() ? npos : (r_result.base() - 1) - start;
         }
@@ -1195,14 +1212,14 @@ namespace mini_stl
         if(pos < size())
         {
             const size_type s_len = length_of_values(s);
-            pointer last;
+            const_pointer last;
             if(len > s_len || len == npos)
                 last = s + s_len;
             else
                 last = s + len;
             for(pointer itr1 = start; itr1 != finish; ++itr1)
             {
-                pointer itr2;
+                const_pointer itr2;
                 for(itr2 = s; itr2 != last; ++itr2)
                     if(*itr1 == *itr2)
                         break;
@@ -1248,7 +1265,7 @@ namespace mini_stl
             else
                 last1 = start + pos;
             const size_type s_len = length_of_values(s);
-            pointer last2;
+            const_pointer last2;
             if(len > s_len || len == npos)
                 last2 = s + s_len;
             else
@@ -1256,7 +1273,7 @@ namespace mini_stl
             reverse_iterator rlast(start);
             for(reverse_iterator itr1(last1); itr1 != rlast; ++itr1)
             {
-                pointer itr2;
+                const_pointer itr2;
                 for(itr2 = s; itr2 != last2; ++itr2)
                     if(*itr1 == *itr2)
                         break;
@@ -1296,9 +1313,9 @@ namespace mini_stl
                 last = finish;
             else
                 last = first + len;
-            return basic_string<T>(first, last);
+            return self(first, last);
         }
-        return basic_string<T>();
+        return self();
     }
     
     template<typename T>
@@ -1489,7 +1506,7 @@ namespace mini_stl
         while(is.get(ch))
         {
             if(ch != EOF && !isblank(ch) && ch != '\n')
-                rhs.pushback(ch);
+                rhs.push_back(ch);
             else
                 break;
         }
@@ -1499,8 +1516,8 @@ namespace mini_stl
     template<typename T>
     inline std::ostream& operator<<(std::ostream& os, const basic_string<T>& rhs)
     {
-        typename basic_string<T>::iterator last = rhs.end();
-        for(typename basic_string<T>::iterator itr = rhs.begin(); itr != last; ++itr)
+        typename basic_string<T>::const_iterator last = rhs.cend();
+        for(typename basic_string<T>::const_iterator itr = rhs.cbegin(); itr != last; ++itr)
             os << *itr;
         return os;
     }

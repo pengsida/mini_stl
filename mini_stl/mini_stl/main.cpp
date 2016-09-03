@@ -13,22 +13,23 @@
 
 using namespace std;
 
-class A
-{
-private:
-    int te;
-public:
-    A():te(8){}
-    void cll(const A& test)
-    {
-        if(te == test.te)
-            cout << "hello world" << endl;
-    }
-};
-
 int main()
 {
-    string te(5,'d');
-    cout << te;
+    mini_stl::string test;
+    cin >> test;
+    cout << test.at(1) << endl;
+    cout << test << endl;
+    cout << test.substr(1,3) << endl;
+    test.append("fsdfsd");
+    cout << test << endl;
+    test.clear();
+    cout << test << endl;
+    test.append("afdl;fajdfal");
+    cout << test << endl;
+    test += "fajlf;ajdl";
+    cout << test << endl;
+    test.erase(test.rfind("faj"));
+    cout << test << endl;
+    cout << test.data() << endl;
     return 0;
 }

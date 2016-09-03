@@ -32,7 +32,7 @@ namespace mini_stl
     public:
         reverse_iterator(){}
         explicit reverse_iterator(const Iterator& rhs);
-        explicit reverse_iterator(const self& rhs);
+        reverse_iterator(const self& rhs);
         
         Iterator base() const;
         

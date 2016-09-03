@@ -37,6 +37,13 @@ namespace mini_stl
         p->~T();
     }
     
+    inline void destroy(char* p)
+    {
+        *p = char();
+    }
+    
+    
+    
     template<typename ForwardIterator>
     inline void __destroy_aux(ForwardIterator first, ForwardIterator last, true_type)
     {
@@ -60,6 +67,12 @@ namespace mini_stl
     inline void destroy(ForwardIterator first, ForwardIterator last)
     {
         __destroy(first, last, __value_type(first));
+    }
+    
+    inline void destroy(char* first, char * last)
+    {
+        if(first != last)
+            *first = char();
     }
 }
 

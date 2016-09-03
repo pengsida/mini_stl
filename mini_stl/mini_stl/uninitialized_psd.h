@@ -31,6 +31,7 @@ namespace mini_stl
     {
         for(; first != last; ++start, ++first)
             construct(&*start, *first);
+        return start;
     }
     
     template<typename InputIterator, typename ForwardIterator, typename T_forward_iterator>
