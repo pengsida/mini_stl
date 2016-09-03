@@ -23,6 +23,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		490E949B1D77D3C2006B214B /* string_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = string_psd.h; sourceTree = "<group>"; };
 		49A849C21D7139C5006E30CC /* mini_stl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mini_stl; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A849C51D7139C5006E30CC /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		49A849CD1D71732D006E30CC /* alloc_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = alloc_psd.h; sourceTree = "<group>"; };
@@ -78,6 +79,7 @@
 				49E6D08E1D76575000694865 /* vector_psd.h */,
 				49E6D08F1D765F4F00694865 /* uninitialized_psd.h */,
 				49E6D0901D76D6C600694865 /* algorithm_psd.h */,
+				490E949B1D77D3C2006B214B /* string_psd.h */,
 			);
 			path = mini_stl;
 			sourceTree = "<group>";
