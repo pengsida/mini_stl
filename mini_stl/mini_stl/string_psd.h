@@ -59,6 +59,7 @@ namespace mini_stl
         
     private:
         static size_type length_of_values(const value_type* s);
+        static int compare_aux(const value_type* str1, size_type len1, const value_type* str2, size_type len2);
         
     public:
         // constructor
@@ -171,7 +172,7 @@ namespace mini_stl
         size_type find(const value_type* s, size_type pos, size_type len) const;
         size_type find(value_type c, size_type pos = 0) const;
         
-        // searching range: (0, pos]
+        // searching range: [0, pos)
         size_type rfind(const self& rhs, size_type pos = npos) const;
         size_type rfind(const value_type* s, size_type pos = npos) const;
         size_type rfind(const value_type* s, size_type pos, size_type len) const;
@@ -181,7 +182,7 @@ namespace mini_stl
         size_type find_first_of(const self& rhs, size_type pos = 0) const;
         size_type find_first_of(const value_type* s, size_type pos = 0) const;
         size_type find_first_of(const value_type* s, size_type pos, size_type len) const;
-        size_type find_first_of(char c, size_type pos = 0) const;
+        size_type find_first_of(value_type c, size_type pos = 0) const;
         
         // Find character in string from the end
         size_type find_last_of(const self& rhs, size_type pos = npos) const;
@@ -199,11 +200,11 @@ namespace mini_stl
         size_type find_last_not_of(const value_type* s, size_type pos, size_type len) const;
         size_type find_last_not_of(value_type c, size_type pos = npos) const;
         
-        self substr(size_type pos = 0, size_type len = npos);
+        self substr(size_type pos = 0, size_type len = npos) const;
         
-        int compare(const self& str) const;
-        int compare(size_type pos, size_type len, const self& str) const;
-        int compare(size_type pos, size_type len, const self& str, size_type compare_pos, size_type compare_len) const;
+        int compare(const self& rhs) const;
+        int compare(size_type pos, size_type len, const self& rhs) const;
+        int compare(size_type pos, size_type len, const self& rhs, size_type compare_pos, size_type compare_len) const;
         int compare(const value_type* s) const;
         int compare(size_type pos, size_type len, const value_type* s) const;
         int compare(size_type pos, size_type len, const value_type* s, size_type n) const;
@@ -219,6 +220,16 @@ namespace mini_stl
         size_type count;
         for(count = 0; s[count] != null; ++count){}
         return count;
+    }
+    
+    template<typename T>
+    int basic_string<T>::compare_aux(const value_type* str1, size_type len1, const value_type* str2, size_type len2)
+    {
+        size_type len = min(len1, len2);
+        for(size_type i = 0; i < len; ++i)
+            if(str1[i] != str2[i])
+                return str1[i] < str2[i] ? -1 : 1;
+        return len1 == len2 ? 0 : (len1 < len2 ? -1 : 1);
     }
     
     template<typename T>
@@ -992,7 +1003,7 @@ namespace mini_stl
             if(r_result == rlast)
                 return npos;
             else
-                return r_result.base() - start;
+                return (r_result.base() - 1) - start;
         }
         return npos;
     }
@@ -1000,13 +1011,244 @@ namespace mini_stl
     template<typename T>
     typename basic_string<T>::size_type basic_string<T>::find_first_of(const self& rhs, size_type pos) const
     {
-        return find(rhs, pos);
+        if(pos < size())
+        {
+            pointer result = find_first_of(start + pos, finish, rhs.start, rhs.finish);
+            return result == finish ? npos : result - start;
+        }
+        return npos;
     }
     
     template<typename T>
     typename basic_string<T>::size_type basic_string<T>::find_first_of(const value_type* s, size_type pos) const
     {
-        return find(s, pos);
+        return find_first_of(s, pos, length_of_values(s));
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_first_of(const value_type* s, size_type pos, size_type len) const
+    {
+        if(pos < size())
+        {
+            const size_type s_len = length_of_values(s);
+            pointer last;
+            if(len > s_len || len == npos)
+                last = s + s_len;
+            else
+                last = s + len;
+            pointer result = find_first_of(start + pos, finish, s, last);
+            return result == finish ? npos : result - start;
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_first_of(value_type c, size_type pos) const
+    {
+        return find(c, pos);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_last_of(const self& rhs, size_type pos) const
+    {
+        return find_last_of(rhs.start, pos, rhs.size());
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_last_of(const value_type* s, size_type pos) const
+    {
+        return find_last_of(s, pos, length_of_values(s));
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_last_of(const value_type* s, size_type pos, size_type len) const
+    {
+        if(pos != 0)
+        {
+            pointer last1;
+            if(pos > size() || pos == npos)
+                last1 = finish;
+            else
+                last1 = start + pos;
+            const size_type s_len = length_of_values(s);
+            pointer last2;
+            if(len > s_len || len == npos)
+                last2 = finish;
+            else
+                last2 = start + len;
+            reverse_iterator r_result = find_first_of(reverse_iterator(last1), rend(), s, last2);
+            return r_result == rend() ? npos : (r_result.base() - 1) - start;
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_last_of(value_type c, size_type pos) const
+    {
+        return rfind(c, pos);
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_first_not_of(const self& rhs, size_type pos) const
+    {
+        return find_first_not_of(rhs.start, pos, rhs.size());
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_first_not_of(const value_type* s, size_type pos) const
+    {
+        return find_first_not_of(s, pos, length_of_values(s));
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_first_not_of(const value_type* s, size_type pos, size_type len) const
+    {
+        if(pos < size())
+        {
+            const size_type s_len = length_of_values(s);
+            pointer last;
+            if(len > s_len || len == npos)
+                last = s + s_len;
+            else
+                last = s + len;
+            for(pointer itr1 = start; itr1 != finish; ++itr1)
+            {
+                pointer itr2;
+                for(itr2 = s; itr2 != last; ++itr2)
+                    if(*itr1 == *itr2)
+                        break;
+                if(itr2 == last)
+                    return itr1 - start;
+            }
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_first_not_of(value_type c, size_type pos) const
+    {
+        if(pos < size())
+        {
+            for(pointer itr = start + pos; itr != finish; ++itr)
+                if(*itr != c)
+                    return itr - start;
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_last_not_of(const self& rhs, size_type pos) const
+    {
+        return find_last_not_of(rhs.start, pos, rhs.size());
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_last_not_of(const value_type* s, size_type pos) const
+    {
+        return find_last_not_of(s, pos, length_of_values(s));
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_last_not_of(const value_type* s, size_type pos, size_type len) const
+    {
+        if(pos != 0)
+        {
+            pointer last1;
+            if(pos > size() || pos == npos)
+                last1 = finish;
+            else
+                last1 = start + pos;
+            const size_type s_len = length_of_values(s);
+            pointer last2;
+            if(len > s_len || len == npos)
+                last2 = s + s_len;
+            else
+                last2 = s + len;
+            reverse_iterator rlast(start);
+            for(reverse_iterator itr1(last1); itr1 != rlast; ++itr1)
+            {
+                pointer itr2;
+                for(itr2 = s; itr2 != last2; ++itr2)
+                    if(*itr1 == *itr2)
+                        break;
+                if(itr2 == last2)
+                    return (itr1.base() - 1) - start;
+            }
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::size_type basic_string<T>::find_last_not_of(value_type c, size_type pos) const
+    {
+        if(pos != 0)
+        {
+            pointer last;
+            if(pos > size() || pos == npos)
+                last = finish;
+            else
+                last = start + pos;
+            reverse_iterator rlast(start);
+            for(reverse_iterator itr(last); itr != rlast; ++itr)
+                if(*itr != c)
+                    return (itr.base() - 1) - start;
+        }
+        return npos;
+    }
+    
+    template<typename T>
+    typename basic_string<T>::self basic_string<T>::substr(size_type pos, size_type len) const
+    {
+    }
+    
+    template<typename T>
+    int basic_string<T>::compare(const self& rhs) const
+    {
+        return compare_aux(start, size(), rhs.start, rhs.size());
+    }
+    
+    template<typename T>
+    int basic_string<T>::compare(size_type pos, size_type len, const self& rhs, size_type compare_pos, size_type compare_len) const
+    {
+        if(pos < size() && compare_pos < rhs.size())
+        {
+            pointer first1 = start + pos;
+            pointer first2 = rhs.start + compare_pos;
+            if(len > (finish - first1))
+                len = finish - first1;
+            if(compare_len > (rhs.finish - first2))
+                compare_len = rhs.finish - first2;
+            return compare_aux(first1, len, first2, compare_len);
+        }
+        return 0;
+    }
+    
+    template<typename T>
+    int basic_string<T>::compare(const value_type* s) const
+    {
+        return compare_aux(start, size(), s, length_of_values(s));
+    }
+    
+    template<typename T>
+    int basic_string<T>::compare(size_type pos, size_type len, const value_type* s) const
+    {
+        return compare(pos, len, s, length_of_values(s));
+    }
+    
+    template<typename T>
+    int basic_string<T>::compare(size_type pos, size_type len, const value_type* s, size_type n) const
+    {
+        if(pos < size())
+        {
+            pointer first = start + pos;
+            if(len > (finish - first))
+                len = finish - first;
+            const size_type s_len = length_of_values(s);
+            if(n > s_len)
+                n = s_len;
+            return compare_aux(first, len, s, n);
+        }
+        return 0;
     }
     
     typedef basic_string<char> string;

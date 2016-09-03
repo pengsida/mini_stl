@@ -16,7 +16,31 @@
 
 namespace mini_stl
 {
+    // max and min
+    template<typename T>
+    inline T max(const T& x, const T& y)
+    {
+        return x > y ? x : y;
+    }
+    
+    template<typename T>
+    inline T min(const T& x, const T& y)
+    {
+        return x < y ? x : y;
+    }
+    
+    ////////////////////////////////////////////
     // find
+    
+    template<typename SearchedIterator, typename InputIterator>
+    inline SearchedIterator find_first_of(SearchedIterator first1, SearchedIterator last1, InputIterator first2, InputIterator last2)
+    {
+        for(;first1 != last1; ++first1)
+            for(InputIterator itr = first2; itr != last2; ++itr)
+                if(*itr == *first1)
+                    return first1;
+        return last1;
+    }
     
     template<typename SearchedIterator, typename T>
     inline SearchedIterator find(SearchedIterator first, SearchedIterator last, const T& value)
