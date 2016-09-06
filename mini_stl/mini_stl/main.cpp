@@ -7,29 +7,31 @@
 //
 
 #include <iostream>
-#include "string_psd.h"
-#include <string>
-#include "allocator_psd.h"
+#include "list_psd.h"
+#include <list>
 
 using namespace std;
 
+
 int main()
 {
-    mini_stl::string test;
-    cin >> test;
-    cout << test.at(1) << endl;
-    cout << test << endl;
-    cout << test.substr(1,3) << endl;
-    test.append("fsdfsd");
-    cout << test << endl;
-    test.clear();
-    cout << test << endl;
-    test.append("afdl;fajdfal");
-    cout << test << endl;
-    test += "fajlf;ajdl";
-    cout << test << endl;
-    test.erase(test.rfind("faj"));
-    cout << test << endl;
-    cout << test.data() << endl;
+    list<int> te;
+    te.push_back(400);
+    te.push_back(10);
+    list<int> tes;
+    tes.push_back(1);
+    tes.push_back(500);
+    tes.push_back(3);
+    tes.push_back(4);
+//    te.insert(te.begin(), tes.begin(), tes.end());
+//    te.resize(10,5);
+//    te.splice(te.begin(), tes);
+//    te.unique();
+    te.merge(tes);
+    for(list<int>::iterator itr = te.begin(); itr != te.end(); ++itr)
+        cout << *itr << endl;
+    cout << endl;
+//    for(list<int>::iterator itr = tes.begin(); itr != tes.end(); ++itr)
+//        cout << *itr << endl;
     return 0;
 }

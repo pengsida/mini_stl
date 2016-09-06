@@ -253,6 +253,7 @@ namespace mini_stl
     template<typename T, typename Alloc>
     void vector<T,Alloc>::reserve(size_type n)
     {
+        n = (0 == n ? 1 : n);
         if(capacity() < n)
         {
             iterator new_start = data_allocator::allocate(capacity()*2 > n ? capacity()*2 : n);
