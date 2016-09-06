@@ -18,7 +18,11 @@
 
 // const T& v; v是常量引用，也就是不能改变v的值
 
-//通过list的实现学习仿函数
+// 通过list的实现学习仿函数
+
+// template<typename T, typename Ref, typename Ptr>
+// struct iterator{//...};
+// 之所以加上Ref和Ptr，是为了能定义const_iterator
 
 namespace mini_stl
 {
@@ -34,13 +38,13 @@ namespace mini_stl
     };
     
     // 这是一个bidirectional_iterator类型的迭代器
-    template<typename T>
+    template<typename T, typename Ref, typename Ptr>
     struct iterator
     {
         typedef bidirectional_iterator_tag iterator_category;
         typedef T value_type;
-        typedef T* pointer;
-        typedef T& reference;
+        typedef Ptr pointer;
+        typedef Ref reference;
         typedef size_t size_type;
         typedef ptrdiff_t difference_type;
         
@@ -54,6 +58,11 @@ namespace mini_stl
         explicit iterator(list_node_ptr node): node(node){}
         iterator(const iterator& rhs): node(rhs.node){}
         ~iterator(){node = NULL;}
+        iterator& operator=(const iterator& rhs)
+        {
+            node = rhs.node;
+            return *this;
+        }
         
         reference operator*() const{return node->data;}
         pointer operator->() const{return &(operator*());}
@@ -98,8 +107,8 @@ namespace mini_stl
         typedef const T& const_reference;
         typedef T* pointer;
         typedef const T* const_pointer;
-        typedef iterator<const T> const_iterator;
-        typedef iterator<T> iterator;
+        typedef iterator<T,const T&,const T*> const_iterator;
+        typedef iterator<T,T&,T*> iterator;
         typedef reverse_iterator<const_iterator> const_reverse_iterator;
         typedef reverse_iterator<iterator> reverse_iterator;
         typedef ptrdiff_t difference_type;
@@ -113,20 +122,20 @@ namespace mini_stl
         list_node_ptr tail;
         
     private:
-        static list_node_ptr construct_node(const value_type& v)
+        list_node_ptr construct_node(const value_type& v)
         {
             list_node_ptr new_node = node_allocator::allocate();
             construct(new_node, v);
             return new_node;
         }
         
-        static void destroy_node(list_node_ptr cur_node)
+        void destroy_node(list_node_ptr cur_node)
         {
             destroy(cur_node);
             node_allocator::deallocate(cur_node);
         }
         
-        static void destroy_node(iterator first, iterator last)
+        void destroy_node(iterator first, iterator last)
         {
             for(; first != last; ++first)
                 destroy_node(first.node);
@@ -144,6 +153,19 @@ namespace mini_stl
             clear();
             for(; first != last; ++first)
                 push_back(*first);
+        }
+        
+        template<typename InputIterator>
+        void insert_aux(iterator position, InputIterator first, InputIterator last, true_type)
+        {
+            insert(position, size_type(first), last);
+        }
+        
+        template<typename InputIterator>
+        void insert_aux(iterator position, InputIterator first, InputIterator last, false_type)
+        {
+            for(; first != last; ++first)
+                insert(position, *first);
         }
         
     public:
@@ -193,13 +215,13 @@ namespace mini_stl
         
         // Iterators
         iterator begin(){return iterator(tail->next);}
-        const_iterator begin() const{return iterator(tail->next);}
+        const_iterator begin() const{return const_iterator(tail->next);}
         iterator end(){return iterator(tail);}
-        const_iterator end() const{return iterator(tail);}
+        const_iterator end() const{return const_iterator(tail);}
         reverse_iterator rbegin(){return reverse_iterator(end());}
-        const_reverse_iterator rbegin() const{return reverse_iterator(end());}
+        const_reverse_iterator rbegin() const{return const_reverse_iterator(end());}
         reverse_iterator rend(){return reverse_iterator(begin());}
-        const_reverse_iterator rend() const{return reverse_iterator(end());}
+        const_reverse_iterator rend() const{return const_reverse_iterator(end());}
         const_iterator cbegin() const{return const_iterator(tail->next);}
         const_iterator cend() const{return const_iterator(tail);}
         const_reverse_iterator rcbegin() const{return const_reverse_iterator(cend());}
@@ -294,8 +316,8 @@ namespace mini_stl
         template<typename InputIterator>
         void insert(iterator position, InputIterator first, InputIterator last)
         {
-            for(; last != first;)
-                position = insert(position, *(--last));
+            typedef typename is_integer<InputIterator>::_Integer _Integer;
+            insert_aux(position, first, last, _Integer());
         }
         
         iterator erase(iterator position)
@@ -494,6 +516,7 @@ namespace mini_stl
     
     // 参考了源码的实现方式
     // 有点插入排序的思想
+    // 时间复杂度为nlog(n)
 //    template<typename T, typename Alloc>
 //    void list<T,Alloc>::sort()
 //    {
@@ -521,6 +544,7 @@ namespace mini_stl
 //    }
 
     // 直接使用insertion sort
+    // 时间复杂度为n^2
     template<typename T, typename Alloc>
     void list<T,Alloc>::sort()
     {
@@ -627,6 +651,8 @@ namespace mini_stl
         {
             if(*first1 < *first2)
                 return true;
+            if(*first2 < *first1)
+                return false;
             ++first1;
             ++first2;
         }
