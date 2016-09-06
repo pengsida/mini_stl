@@ -46,7 +46,7 @@ namespace mini_stl
     template<typename T, typename Alloc>
     typename allocator<T, Alloc>::value_type* allocator<T, Alloc>::allocate()
     {
-        return static_cast<pointer>(Alloc::allocator(sizeof(value_type)));
+        return static_cast<pointer>(Alloc::allocate(sizeof(value_type)));
     }
     
     template<typename T, typename Alloc>

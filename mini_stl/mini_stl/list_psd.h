@@ -12,6 +12,7 @@
 #include "allocator_psd.h"
 #include "algorithm_psd.h"
 #include "reverse_iterator_psd.h"
+#include <iostream>
 
 //note
 
@@ -30,11 +31,6 @@ namespace mini_stl
         
         node():prev(NULL), next(NULL), data(T()){}
         explicit node(const T& value): prev(NULL), next(NULL), data(value){}
-        ~node()
-        {
-            prev = NULL;
-            next = NULL;
-        }
     };
     
     // 这是一个bidirectional_iterator类型的迭代器
@@ -136,6 +132,20 @@ namespace mini_stl
                 destroy_node(first.node);
         }
         
+        template<typename InputIterator>
+        void assign_aux(InputIterator first, InputIterator last, true_type)
+        {
+            assign(size_type(first), last);
+        }
+        
+        template<typename InputIterator>
+        void assign_aux(InputIterator first, InputIterator last, false_type)
+        {
+            clear();
+            for(; first != last; ++first)
+                push_back(*first);
+        }
+        
     public:
         // constructor
         list():tail(construct_node(value_type())){tail->next = tail; tail->prev = tail;}
@@ -226,9 +236,8 @@ namespace mini_stl
         template<typename InputIterator>
         void assign(InputIterator first, InputIterator last)
         {
-            clear();
-            for(; first != last; ++first)
-                push_back(*first);
+            typedef typename is_integer<InputIterator>::_Integral _Integral;
+            assign_aux(first, last, _Integral());
         }
     
         void push_front(const value_type& v)
@@ -311,7 +320,7 @@ namespace mini_stl
         
         void swap(list& rhs)
         {
-            swap(tail, rhs.tail);
+            mini_stl::swap(tail, rhs.tail);
         }
         
         void resize(size_type n);
@@ -349,7 +358,7 @@ namespace mini_stl
             }
         }
         
-        list& remove(const value_type& v)
+        void remove(const value_type& v)
         {
             iterator last = end();
             for(iterator itr = begin(); itr != last;)
@@ -360,7 +369,7 @@ namespace mini_stl
         }
         
         template<typename Predicate>
-        list& remove_if(Predicate pred)
+        void remove_if(Predicate pred)
         {
             iterator last = end();
             for(iterator itr = begin(); itr != last;)
@@ -506,7 +515,7 @@ namespace mini_stl
 //                if(index == fill) ++fill;
 //            }
 //            for(int index = 1; index < fill; ++index)
-//                counter[index].merge(counter[index - 1], comp);
+//                counter[index].merge(counter[index - 1]);
 //            swap(counter[fill-1]);
 //        }
 //    }
@@ -515,13 +524,13 @@ namespace mini_stl
     template<typename T, typename Alloc>
     void list<T,Alloc>::sort()
     {
-        if(tail->next != tail && tail->next->next != tail)
+        if(tail->next != tail)
         {
             iterator i = ++begin();
-            iterator first = begin();
             iterator last = end();
-            for(; i != last;)
+            while(i != last)
             {
+                iterator first = begin();
                 iterator next = i;
                 ++next;
                 iterator j = i;

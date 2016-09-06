@@ -8,30 +8,35 @@
 
 #include <iostream>
 #include "list_psd.h"
+#include "vector_psd.h"
 #include <list>
 
 using namespace std;
 
-
 int main()
 {
-    list<int> te;
-    te.push_back(400);
-    te.push_back(10);
-    list<int> tes;
+    mini_stl::list<int> test;
+    test.push_back(4);
+    test.push_back(5);
+    test.push_back(3);
+    test.push_back(2);
+    test.push_back(2);
+    test.push_back(1);
+    test.sort();
+    test.insert(--test.end(), 2);
+    
+    mini_stl::list<int> tes;
     tes.push_back(1);
-    tes.push_back(500);
-    tes.push_back(3);
-    tes.push_back(4);
-//    te.insert(te.begin(), tes.begin(), tes.end());
-//    te.resize(10,5);
-//    te.splice(te.begin(), tes);
-//    te.unique();
-    te.merge(tes);
-    for(list<int>::iterator itr = te.begin(); itr != te.end(); ++itr)
+    tes.push_back(100);
+    
+    test.unique();
+    
+    for(mini_stl::list<int>::iterator itr = test.begin(); itr != test.end(); ++itr)
         cout << *itr << endl;
+    
     cout << endl;
-//    for(list<int>::iterator itr = tes.begin(); itr != tes.end(); ++itr)
-//        cout << *itr << endl;
+    
+    for(mini_stl::list<int>::iterator itr = tes.begin(); itr != tes.end(); ++itr)
+        cout << *itr << endl;
     return 0;
 }

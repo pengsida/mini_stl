@@ -234,6 +234,84 @@ namespace mini_stl
         typedef true_type has_trivial_destructor;
         typedef true_type is_POD_type;
     };
+    
+    template<typename T>
+    struct is_integer
+    {
+        typedef false_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<bool>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<char>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<signed char>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<unsigned char>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<short>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<unsigned short>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<int>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<unsigned int>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<long>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<unsigned long>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<long long>
+    {
+        typedef true_type _Integral;
+    };
+    
+    template<>
+    struct is_integer<unsigned long long>
+    {
+        typedef true_type _Integral;
+    };
 }
 
 #endif /* type_traits_psd_h */

@@ -15,6 +15,55 @@
 // mini_stl::vector<int> my_test;
 // my_test.insert(my_test.begin(), 5, 5);
 // cout << *(++my_test.begin()) << endl;
+// 我在提出下一个疑问的时候发现，上述问题貌似是因为函数返回值类型是指针时不可修改导致的
+// 详细情况见下一个疑问
+
+// 还有个疑问
+// 实现back函数的时候，为什么不能写 return *(--end());
+// 而在list实现back函数的时候，却可以这么写
+// 是因为函数返回值类型是指针时不可修改吗
+// 我写了测试程序试了一下，貌似就是这样的
+//#include <iostream>
+//#include <list>
+//
+//using namespace std;
+//
+//class teee
+//{
+//private:
+//    int* data;
+//    
+//public:
+//    explicit teee(int* da):data(da){}
+//    teee(const teee& rhs):data(rhs.data){}
+//    
+//    int operator*() const{return *data;}
+//    
+//    teee operator++()
+//    {
+//        ++data;
+//        return *this;
+//    }
+//};
+//
+//teee test(int* a)
+//{
+//    return teee(a);
+//}
+//
+//int* testt(int* a)
+//{
+//    return a;
+//}
+//
+//int main()
+//{
+//    int te[10] = {1,2,3,4,5,6,7,8,9,10};
+//    teee tee(te);
+//    cout << *(++test(te)) << endl;
+//    cout << *(++testt(te)) << endl; // Expression is not assignable
+//    return 0;
+//}
 
 namespace mini_stl
 {
