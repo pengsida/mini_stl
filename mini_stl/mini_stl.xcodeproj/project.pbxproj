@@ -32,6 +32,7 @@
 		49A9923F1D72FDC400B7BBC2 /* construct_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = construct_psd.h; sourceTree = "<group>"; };
 		49A992401D730BAD00B7BBC2 /* type_traits_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = type_traits_psd.h; sourceTree = "<group>"; };
 		49A992411D730D9B00B7BBC2 /* iterator_traits_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iterator_traits_psd.h; sourceTree = "<group>"; };
+		49C849301D7E94AE0046398F /* deque_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = deque_psd.h; sourceTree = "<group>"; };
 		49E6D08E1D76575000694865 /* vector_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vector_psd.h; sourceTree = "<group>"; };
 		49E6D08F1D765F4F00694865 /* uninitialized_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = uninitialized_psd.h; sourceTree = "<group>"; };
 		49E6D0901D76D6C600694865 /* algorithm_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = algorithm_psd.h; sourceTree = "<group>"; };
@@ -82,6 +83,7 @@
 				49E6D0901D76D6C600694865 /* algorithm_psd.h */,
 				490E949B1D77D3C2006B214B /* string_psd.h */,
 				497C9AFA1D7BB6ED00E1E1CD /* list_psd.h */,
+				49C849301D7E94AE0046398F /* deque_psd.h */,
 			);
 			path = mini_stl;
 			sourceTree = "<group>";
