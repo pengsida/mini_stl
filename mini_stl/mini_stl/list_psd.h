@@ -39,7 +39,7 @@ namespace mini_stl
     
     // 这是一个bidirectional_iterator类型的迭代器
     template<typename T, typename Ref, typename Ptr>
-    struct iterator
+    struct list_iterator
     {
         typedef bidirectional_iterator_tag iterator_category;
         typedef T value_type;
@@ -54,11 +54,11 @@ namespace mini_stl
         // 用于完成iterator的任务
         list_node_ptr node;
         
-        iterator():node(NULL){}
-        explicit iterator(list_node_ptr node): node(node){}
-        iterator(const iterator& rhs): node(rhs.node){}
-        ~iterator(){node = NULL;}
-        iterator& operator=(const iterator& rhs)
+        list_iterator():node(NULL){}
+        explicit list_iterator(list_node_ptr node): node(node){}
+        list_iterator(const list_iterator& rhs): node(rhs.node){}
+        ~list_iterator(){node = NULL;}
+        list_iterator& operator=(const list_iterator& rhs)
         {
             node = rhs.node;
             return *this;
@@ -67,31 +67,31 @@ namespace mini_stl
         reference operator*() const{return node->data;}
         pointer operator->() const{return &(operator*());}
         
-        bool operator==(const iterator& rhs){return node == rhs.node;}
-        bool operator!=(const iterator& rhs){return node != rhs.node;}
+        bool operator==(const list_iterator& rhs){return node == rhs.node;}
+        bool operator!=(const list_iterator& rhs){return node != rhs.node;}
         
-        iterator& operator++()
+        list_iterator& operator++()
         {
             node = node->next;
             return *this;
         }
         
-        iterator operator++(int)
+        list_iterator operator++(int)
         {
-            iterator old = *this;
+            list_iterator old = *this;
             node = node->next;
             return old;
         }
         
-        iterator& operator--()
+        list_iterator& operator--()
         {
             node = node->prev;
             return *this;
         }
         
-        iterator operator--(int)
+        list_iterator operator--(int)
         {
-            iterator old = *this;
+            list_iterator old = *this;
             node = node->prev;
             return old;
         }
@@ -107,8 +107,8 @@ namespace mini_stl
         typedef const T& const_reference;
         typedef T* pointer;
         typedef const T* const_pointer;
-        typedef iterator<T,const T&,const T*> const_iterator;
-        typedef iterator<T,T&,T*> iterator;
+        typedef list_iterator<T,const T&,const T*> const_iterator;
+        typedef list_iterator<T,T&,T*> iterator;
         typedef reverse_iterator<const_iterator> const_reverse_iterator;
         typedef reverse_iterator<iterator> reverse_iterator;
         typedef ptrdiff_t difference_type;
@@ -316,8 +316,8 @@ namespace mini_stl
         template<typename InputIterator>
         void insert(iterator position, InputIterator first, InputIterator last)
         {
-            typedef typename is_integer<InputIterator>::_Integer _Integer;
-            insert_aux(position, first, last, _Integer());
+            typedef typename is_integer<InputIterator>::_Integral _Integral;
+            insert_aux(position, first, last, _Integral());
         }
         
         iterator erase(iterator position)

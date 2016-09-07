@@ -14,5 +14,6 @@ using namespace std;
 
 int main()
 {
+    cout << size_t('a') << endl;
     return 0;
 }

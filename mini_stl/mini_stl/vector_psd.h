@@ -507,10 +507,18 @@ namespace mini_stl
     {
         if(last != first)
         {
-            const size_type len = last - first;
-            iterator position = copy(last, end(), first);
-            destroy(position, end());
-            finish = finish - len;
+            if(first == start && last == finish)
+            {
+                clear();
+                return end();
+            }
+            else
+            {
+                const size_type len = last - first;
+                iterator position = copy(last, end(), first);
+                destroy(position, end());
+                finish = finish - len;
+            }
         }
         return first;
     }
