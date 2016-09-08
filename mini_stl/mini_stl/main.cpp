@@ -7,13 +7,16 @@
 //
 
 #include <iostream>
-#include "deque_psd.h"
+#include "queue_psd.h"
 
 using namespace std;
 
-
 int main()
 {
-    cout << size_t('a') << endl;
+    mini_stl::queue<int> test;
+    test.push(3);
+    mini_stl::queue<int> tes;
+    tes.push(3);
+    if(test == tes) cout << "hello world" << endl;
     return 0;
 }

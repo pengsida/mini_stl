@@ -21,7 +21,7 @@ namespace mini_stl
     template<typename size_type>
     inline size_type get_buffer_size(size_type n, size_type size_of_data)
     {
-        return (n == 0 ? (size_of_data < DefaultSize ? 1 : size_type(DefaultSize/size_of_data)) : n);
+        return (n == 0 ? (size_of_data < DefaultSize ? size_type(DefaultSize/size_of_data) : 1) : n);
     }
     
     // 这是一个random_access_iterator类型的迭代器
@@ -53,9 +53,9 @@ namespace mini_stl
             last = first + buffer_size;
         }
         
-        deque_iterator(const deque_iterator& rhs): node(rhs.node),first(rhs.first),cur_pos(rhs.cur_pos),last(rhs.last){}
         // 用于iterator向const_iterator的类型转换
-        deque_iterator(deque_iterator<T, T&, T*, BufSiz>& rhs): node(rhs.node),first(rhs.first),cur_pos(rhs.cur_pos),last(rhs.last){}
+        deque_iterator(const deque_iterator<T, T&, T*, BufSiz>& rhs): node(rhs.node),first(rhs.first),cur_pos(rhs.cur_pos),last(rhs.last){}
+        
         ~deque_iterator()
         {
             node = NULL;
@@ -132,7 +132,7 @@ namespace mini_stl
             return *this;
         }
         
-        deque_iterator operator+(difference_type n)
+        deque_iterator operator+(difference_type n) const
         {
             deque_iterator result = *this;
             return (result += n);
@@ -143,7 +143,7 @@ namespace mini_stl
             return (*this += (-n));
         }
         
-        deque_iterator operator-(difference_type n)
+        deque_iterator operator-(difference_type n) const
         {
             return (*this + (-n));
         }
@@ -165,6 +165,25 @@ namespace mini_stl
     
     template<typename T, typename Ref, typename Ptr, size_t BufSiz>
     const typename deque_iterator<T, Ref, Ptr, BufSiz>::size_type deque_iterator<T, Ref, Ptr, BufSiz>::buffer_size = get_buffer_size(BufSiz, sizeof(T));
+    
+    template<typename T, typename Ref, typename Ptr, size_t BufSiz, typename SizeType>
+    inline deque_iterator<T, Ref, Ptr, BufSiz> operator+(SizeType n, const deque_iterator<T, Ref, Ptr, BufSiz>& rhs)
+    {
+        typedef typename deque_iterator<T, Ref, Ptr, BufSiz>::difference_type difference_type;
+        return rhs + difference_type(n);
+    }
+    
+    template<typename T, typename Ref, typename Ptr, size_t BufSiz>
+    inline random_access_iterator_tag iterator_category(const deque_iterator<T, Ref, Ptr, BufSiz>&)
+    {
+        return random_access_iterator_tag();
+    }
+    
+    template<typename T, typename Ref, typename Ptr, size_t BufSiz>
+    inline typename deque_iterator<T, Ref, Ptr, BufSiz>::value_type* __value_type(const deque_iterator<T, Ref, Ptr, BufSiz>&)
+    {
+        return static_cast<typename deque_iterator<T, Ref, Ptr, BufSiz>::value_type*>(0);
+    }
     
     template<typename T, typename Alloc = alloc, size_t BufSiz = 0>
     class deque
@@ -191,10 +210,10 @@ namespace mini_stl
         typedef allocator<T, Alloc> node_allocator;
         typedef allocator<pointer, Alloc> map_allocator;
         
+        size_type map_size;
         map_pointer map;
         iterator start;
         iterator finish;
-        size_type map_size;
         
     public:
         static const size_type buffer_size;
@@ -268,7 +287,7 @@ namespace mini_stl
             else
             {
                 copy(first, first + sz, start);
-                uninitialized_copy(first + sz, last, finish);
+                finish = uninitialized_copy(first + sz, last, finish);
             }
         }
         
@@ -283,8 +302,14 @@ namespace mini_stl
         
     public:
         // constructor
-        deque():start(),finish(),map(NULL),map_size(0){}
+        deque()
+        :start(),finish(),map(NULL),map_size(0)
+        {
+            allocate_map(0, value_type());
+        }
+        
         explicit deque(size_type n, const value_type& v = value_type())
+        :start(),finish(),map(NULL),map_size(0)
         {
             allocate_map(n, v);
         }
@@ -313,19 +338,24 @@ namespace mini_stl
         // destructor
         ~deque()
         {
-            clear();
+            destroy(start, finish);
             map_pointer cur_node = map;
-            for(size_type i = 0; i < map_size; ++cur_node)
+            for(size_type i = 0; i < map_size; ++cur_node, ++i)
                 node_allocator::deallocate(*cur_node, buffer_size);
             map_allocator::deallocate(map, map_size);
         }
         
         // operator=
-        deque& operator=(const deque& rhs);
+        deque& operator=(const deque& rhs)
+        {
+            if(&rhs != this)
+                assign(rhs.begin(), rhs.end());
+            return *this;
+        }
         
         // Iterators
         iterator begin(){return start;}
-        const_iterator begin() const{return start;}
+        const_iterator begin() const{return const_iterator(start);}
         iterator end(){return finish;}
         const_iterator end() const{return finish;}
         reverse_iterator rbegin(){return reverse_iterator(start);}
@@ -380,7 +410,7 @@ namespace mini_stl
         
         void push_back(const value_type& v)
         {
-            if(finish.curpos + 1 == finish.last)
+            if(finish.cur_pos + 1 == finish.last)
                 reserve_back();
             construct(finish.cur_pos, v);
             ++finish;
@@ -429,11 +459,14 @@ namespace mini_stl
         
         void clear()
         {
-            destroy(start, finish);
-            start.change_node(map + map_size / 2);
-            finish.change_node(map + map_size / 2);
-            start.cur_pos = start.first;
-            finish.cur_pos = finish.first;
+            if(finish != start)
+            {
+                destroy(start, finish);
+                start.change_node(map + map_size / 2);
+                finish.change_node(map + map_size / 2);
+                start.cur_pos = start.first;
+                finish.cur_pos = finish.first;
+            }
         }
     };
     
@@ -447,13 +480,12 @@ namespace mini_stl
         map_size = mini_stl::max(size_type(8), nodes_num + 2);
         map = map_allocator::allocate(map_size);
         map_pointer start_node = map + (map_size - nodes_num) / 2;
-        map_pointer finish_node = start_node + (nodes_num - 1);
-        for(map_pointer cur_node = start_node; cur_node != finish_node; ++cur_node)
+        map_pointer cur_node = map;
+        for(size_type i = 0; i < map_size; ++cur_node, ++i)
             *cur_node = allocate_node();
         start.change_node(start_node);
-        finish.change_node(finish_node);
         start.cur_pos = start.first;
-        finish.cur_pos = finish.first + (n % buffer_size);
+        finish = uninitialized_fill_n(start, n, v);
     }
     
     template<typename T, typename Alloc, size_t BufSiz>
@@ -472,9 +504,15 @@ namespace mini_stl
         {
             const size_type new_map_size = map_size + mini_stl::max(map_size, nodes_to_add) + 2;
             map_pointer new_map = map_allocator::allocate(new_map_size);
-            new_start_node = map + (new_map_size - new_nodes_num) / 2 + nodes_to_add;
+            map_pointer old_map_start = new_map + (new_map_size - map_size) / 2 + nodes_to_add;
+            map_pointer old_map_end = uninitialized_copy(map, map + map_size, old_map_start);
+            new_start_node = old_map_start;
             new_finish_node = new_start_node + (old_nodes_num - 1);
-            uninitialized_copy(start.node, finish.node + 1, new_start_node);
+            for(map_pointer cur_node = new_map; cur_node < old_map_start; ++cur_node)
+                *cur_node = allocate_node();
+            map_pointer new_map_end = new_map + new_map_size;
+            for(map_pointer cur_node = old_map_end; cur_node < new_map_end; ++cur_node)
+                *cur_node = allocate_node();
             destroy(start.node, finish.node + 1);
             map_allocator::deallocate(map, map_size);
             map = new_map;
@@ -501,9 +539,15 @@ namespace mini_stl
         {
             const size_type new_map_size = map_size + mini_stl::max(map_size, nodes_to_add) + 2;
             map_pointer new_map = map_allocator::allocate(new_map_size);
-            new_start_node = new_map + (new_map_size - new_nodes_num) / 2;
-            new_finish_node = new_start_node + (old_nodes_num - 1);
-            uninitialized_copy(start.node, finish.node + 1, new_start_node);
+            map_pointer old_map_start = new_map + (new_map_size - map_size) / 2;
+            map_pointer old_map_end = uninitialized_copy(map, map + map_size, old_map_start);
+            new_start_node = old_map_end - old_nodes_num;
+            new_finish_node = old_map_end - 1;
+            for(map_pointer cur_node = new_map; cur_node < old_map_start; ++cur_node)
+                *cur_node = allocate_node();
+            map_pointer new_map_end = new_map + new_map_size;
+            for(map_pointer cur_node = old_map_end; cur_node < new_map_end; ++cur_node)
+                *cur_node = allocate_node();
             destroy(start.node, finish.node + 1);
             map_allocator::deallocate(map, map_size);
             map_size = new_map_size;
@@ -533,8 +577,7 @@ namespace mini_stl
     {
         const size_type sz = size();
         if(sz < n)
-            for(size_type tmp = sz; tmp <= n; ++tmp)
-                push_back(v);
+            finish = uninitialized_fill_n(finish, n - sz, v);
         else
         {
             iterator cur_position = begin();
@@ -576,7 +619,7 @@ namespace mini_stl
     template<typename T, typename Alloc, size_t BufSiz>
     void deque<T,Alloc,BufSiz>::insert(iterator position, size_type n, const value_type& v)
     {
-        const size_type index = size_type(position - start + 1);
+        const size_type index = size_type(position - start);
         if(index < size() / 2)
         {
             reserve_front_n_element(n);
@@ -599,7 +642,7 @@ namespace mini_stl
         else
         {
             reserve_back_n_element(n);
-            position = start + (index - 1);
+            position = start + index;
             const size_type elem_after_pos = finish - position;
             if(elem_after_pos < n)
             {
@@ -621,7 +664,7 @@ namespace mini_stl
     template<typename InputIterator>
     void deque<T,Alloc,BufSiz>::insert_aux(iterator position, InputIterator first, InputIterator last, false_type)
     {
-        const size_type index = size_type(position - start + 1);
+        const size_type index = size_type(position - start);
         size_type n = 0;
         distance(first, last, n);
         if(index < size() / 2)
@@ -645,7 +688,7 @@ namespace mini_stl
         else
         {
             reserve_back_n_element(n);
-            position = start + (index - 1);
+            position = start + index;
             const size_type elem_after_pos = finish - position;
             if(elem_after_pos < n)
             {
@@ -723,13 +766,13 @@ namespace mini_stl
         return last;
     }
     
-    // Non-member functions overloads
+    // Non-member functions
     template<typename T, typename Alloc>
     bool operator==(const deque<T,Alloc>& lhs, const deque<T,Alloc>& rhs)
     {
         typedef typename deque<T,Alloc>::const_iterator const_iterator;
-        const_iterator first1 = lhs.start, last1 = lhs.finish;
-        const_iterator first2 = rhs.start, last2 = rhs.finish;
+        const_iterator first1 = lhs.begin(), last1 = lhs.end();
+        const_iterator first2 = rhs.begin(), last2 = rhs.end();
         while(first1 != last1 && first2 != last2)
         {
             if(*first1 != *first2)
@@ -749,7 +792,7 @@ namespace mini_stl
     template<typename T, typename Alloc>
     bool operator<(const deque<T,Alloc>& lhs, const deque<T,Alloc>& rhs)
     {
-        return less_compare(lhs.start, lhs.finish, rhs.start, rhs.finish);
+        return less_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end());
     }
     
     template<typename T, typename Alloc>

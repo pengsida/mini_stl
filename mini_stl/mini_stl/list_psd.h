@@ -56,7 +56,10 @@ namespace mini_stl
         
         list_iterator():node(NULL){}
         explicit list_iterator(list_node_ptr node): node(node){}
-        list_iterator(const list_iterator& rhs): node(rhs.node){}
+        
+        // 用于iterator向const_iterator的转换
+        list_iterator(const list_iterator<T,T&,T*>& rhs): node(rhs.node){}
+        
         ~list_iterator(){node = NULL;}
         list_iterator& operator=(const list_iterator& rhs)
         {
@@ -95,8 +98,19 @@ namespace mini_stl
             node = node->prev;
             return old;
         }
-        
     };
+    
+    template<typename T, typename Ref, typename Ptr>
+    inline typename list_iterator<T, Ref, Ptr>::value_type* __value_type(const list_iterator<T, Ref, Ptr>&)
+    {
+        return static_cast<typename list_iterator<T, Ref, Ptr>::value_type*>(0);
+    }
+    
+    template<typename T, typename Ref, typename Ptr>
+    inline bidirectional_iterator_tag iterator_category(const list_iterator<T, Ref, Ptr>&)
+    {
+        return bidirectional_iterator_tag();
+    }
     
     template<typename T, typename Alloc = alloc>
     class list
@@ -122,7 +136,8 @@ namespace mini_stl
         list_node_ptr tail;
         
     private:
-        list_node_ptr construct_node(const value_type& v)
+        // 参考《imperfect C++》，初始化列表中的参数要函数初始化，为防止该函数提前使用未初始化的成员变量，将函数设为静态成员函数，相当于穿上《imperfect C++》中所说的苦行衣
+        static list_node_ptr construct_node(const value_type& v)
         {
             list_node_ptr new_node = node_allocator::allocate();
             construct(new_node, v);
