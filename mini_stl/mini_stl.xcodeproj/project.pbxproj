@@ -24,6 +24,8 @@
 
 /* Begin PBXFileReference section */
 		490E949B1D77D3C2006B214B /* string_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = string_psd.h; sourceTree = "<group>"; };
+		492779CE1D81260A0033EFCB /* stack_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stack_psd.h; sourceTree = "<group>"; };
+		492779CF1D8145CC0033EFCB /* queue_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = queue_psd.h; sourceTree = "<group>"; };
 		497C9AFA1D7BB6ED00E1E1CD /* list_psd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = list_psd.h; sourceTree = "<group>"; };
 		49A849C21D7139C5006E30CC /* mini_stl */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mini_stl; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A849C51D7139C5006E30CC /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
@@ -84,6 +86,8 @@
 				490E949B1D77D3C2006B214B /* string_psd.h */,
 				497C9AFA1D7BB6ED00E1E1CD /* list_psd.h */,
 				49C849301D7E94AE0046398F /* deque_psd.h */,
+				492779CE1D81260A0033EFCB /* stack_psd.h */,
+				492779CF1D8145CC0033EFCB /* queue_psd.h */,
 			);
 			path = mini_stl;
 			sourceTree = "<group>";
