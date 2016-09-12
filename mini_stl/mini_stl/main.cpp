@@ -7,16 +7,11 @@
 //
 
 #include <iostream>
-#include "queue_psd.h"
+#include "rbtree_psd.h"
 
 using namespace std;
 
 int main()
 {
-    mini_stl::queue<int> test;
-    test.push(3);
-    mini_stl::queue<int> tes;
-    tes.push(3);
-    if(test == tes) cout << "hello world" << endl;
     return 0;
 }
