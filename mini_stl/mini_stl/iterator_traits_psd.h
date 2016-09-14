@@ -53,6 +53,12 @@ namespace mini_stl
     };
     
     template<typename Iterator>
+    inline typename iterator_traits<Iterator>::difference_type* distance_type(const Iterator&)
+    {
+        return static_cast<typename iterator_traits<Iterator>::difference_type*>(0);
+    }
+    
+    template<typename Iterator>
     inline typename iterator_traits<Iterator>::value_type* __value_type(const Iterator&)
     {
         return static_cast<typename iterator_traits<Iterator>::value_type*>(0);
