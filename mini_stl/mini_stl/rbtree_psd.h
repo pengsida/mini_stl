@@ -33,7 +33,7 @@
 // 每个节点不是红色就是黑色
 // 根节点是黑色
 // 如果节点是红色，其子节点必须是黑色
-// 任意节点到NULL节点的任何路径，所含的黑节点数必须相同
+// 任意节点到叶节点的任何路径，所含的黑节点数必须相同(包括叶节点)
 // {
 //     这个规则要求，新增节点必须为红
 //     结合上一规则，新增节点的父节点必须为黑
@@ -52,6 +52,13 @@ namespace mini_stl
         rbtree_node_ptr right;
         rbtree_color_type node_color;
         Value value_field;
+        
+        ~rbtree_node()
+        {
+            parent = NULL;
+            left = NULL;
+            right = NULL;
+        }
         
         static rbtree_node_ptr maximum(rbtree_node_ptr cur_node)
         {
@@ -225,6 +232,10 @@ namespace mini_stl
         {
             rbtree_node_ptr cur_node = node_allocator::allocate();
             construct(&(cur_node->value_field));
+            cur_node->left = NULL;
+            cur_node->right = NULL;
+            cur_node->parent = NULL;
+            cur_node->node_color = rbtree_red;
             return cur_node;
         }
         
@@ -232,6 +243,10 @@ namespace mini_stl
         {
             rbtree_node_ptr cur_node = node_allocator::allocate();
             construct(&(cur_node->value_field), value_type());
+            cur_node->left = NULL;
+            cur_node->right = NULL;
+            cur_node->parent = NULL;
+            cur_node->node_color = rbtree_red;
             return cur_node;
         }
         
@@ -261,6 +276,12 @@ namespace mini_stl
         static reference value(rbtree_node_ptr cur_node){return cur_node->value_field;}
         static const key_type& key(rbtree_node_ptr cur_node){return KeyOfValue()(value(cur_node));}
         static rbtree_color_type& color(rbtree_color_type cur_node){return cur_node->node_color;}
+        
+        static void right_rotation(rbtree_node_ptr cur_node, rbtree_node_ptr& root);
+        static void left_rotation(rbtree_node_ptr cur_node, rbtree_node_ptr& root);
+        static void rbtree_rebalance_after_insert(rbtree_node_ptr cur_node, rbtree_node_ptr& root);
+        
+        iterator insert_aux(rbtree_node_ptr pa_node, const value_type& v);
         
     public:
         // constructor
@@ -321,7 +342,7 @@ namespace mini_stl
         
         // Modifiers
 //        pair<iterator, bool> insert(const value_type& v);
-        iterator insert_unique(const value_type& v);
+        pair<iterator, bool> insert_unique(const value_type& v);
         
         template<typename InputIterator>
         void insert_unique(InputIterator first, InputIterator last)
@@ -339,13 +360,21 @@ namespace mini_stl
                 insert_equal(*first);
         }
         
-        iterator erase(iterator position);
-        size_type erase(const value_type& v);
+        iterator erase(iterator position)
+        {
+            return iterator();
+        }
         
         void erase(iterator first, iterator last)
         {
             for(; first != last; ++first)
                 erase(first);
+        }
+        
+        size_type erase(const key_type& k)
+        {
+            pair<iterator, iterator> itr = equal_range(k);
+            erase(itr.first, itr.second);
         }
         
         void swap(rbtree& rhs)
@@ -391,6 +420,185 @@ namespace mini_stl
     
     template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
     const typename rbtree<Key, Value, KeyOfValue, Compare, Alloc>::rbtree_color_type rbtree<Key, Value, KeyOfValue, Compare, Alloc>::rbtree_black = true;
+    
+    template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+    void rbtree<Key, Value, KeyOfValue, Compare, Alloc>::left_rotation(rbtree_node_ptr cur_node, rbtree_node_ptr& root)
+    {
+        rbtree_node_ptr child = cur_node->right;
+        // 将cur_node的右子树嫁接到child上
+        cur_node->right = child->left;
+        if(child->left != NULL)
+            child->left->parent = cur_node;
+        // 考虑cur_node是root的情况
+        if(cur_node == root)
+            root = child;
+        // child与cur_node相互嫁接
+        child->parent = cur_node->parent;
+        if(cur_node->parent->left == cur_node)
+            cur_node->parent->left = child;
+        else
+            cur_node->parent->right = child;
+        // chil与cur_node相互嫁接
+        child->left = cur_node;
+        cur_node->parent = child;
+    }
+    
+    template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+    void rbtree<Key, Value, KeyOfValue, Compare, Alloc>::right_rotation(rbtree_node_ptr cur_node, rbtree_node_ptr& root)
+    {
+        rbtree_node_ptr child = cur_node->left;
+        cur_node->left = child->right;
+        if(child->right != NULL)
+            child->right->parent = cur_node;
+        if(cur_node == root)
+            root = child;
+        child->parent = cur_node->parent;
+        if(cur_node->parent->left == cur_node)
+            cur_node->parent->left = child;
+        else
+            cur_node->parent->right = child;
+        child->right = cur_node;
+        cur_node->parent = child;
+    }
+    
+    template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+    void rbtree<Key, Value, KeyOfValue, Compare, Alloc>::rbtree_rebalance_after_insert(rbtree_node_ptr cur_node, rbtree_node_ptr& root)
+    {
+        while(cur_node != root && cur_node->parent != rbtree_red)
+        {
+            // cur_node在左子树的情况
+            if(cur_node->parent == cur_node->parent->parent->left)
+            {
+                rbtree_node_ptr uncle = cur_node->parent->parent->right;
+                // 当cur_node和parent都是红色的，根据第四原则，uncle要么是为空节点，要么是红色的。
+                // uncle存在且为红时
+                if(uncle && uncle->node_color == rbtree_red)
+                {
+                    uncle->node_color = rbtree_black;
+                    cur_node->parent->node_color = rbtree_black;
+                    cur_node->parent->parent = rbtree_red;
+                    cur_node = cur_node->parent->parent;
+                }
+                else
+                {
+                    if(cur_node == cur_node->parent->right)
+                    {
+                        cur_node = cur_node->parent;
+                        left_rotation(cur_node, root);
+                    }
+                    cur_node->parent->node_color = rbtree_black;
+                    cur_node->parent->parent->node_color = rbtree_red;
+                    right_rotation(cur_node->parent->parent, root);
+                }
+            }
+            // cur_node在右子树的情况
+            else
+            {
+                rbtree_node_ptr uncle = cur_node->parent->parent->left;
+                if(uncle && uncle->node_color == rbtree_red)
+                {
+                    uncle->node_color = rbtree_black;
+                    cur_node->parent->node_color = rbtree_black;
+                    cur_node->parent->parent = rbtree_black;
+                    cur_node = cur_node->parent->parent;
+                }
+                else
+                {
+                    if(cur_node == cur_node->parent->left)
+                    {
+                        cur_node = cur_node->parent;
+                        right_rotation(cur_node, root);
+                    }
+                    cur_node->parent->node_color = rbtree_black;
+                    cur_node->parent->parent->node_color = rbtree_red;
+                    left_rotation(cur_node->parent->parent, root);
+                }
+            }
+        }
+        root->node_color = rbtree_black;
+    }
+    
+    template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+    typename rbtree<Key, Value, KeyOfValue, Compare, Alloc>::iterator rbtree<Key, Value, KeyOfValue, Compare, Alloc>::insert_aux(rbtree_node_ptr pa_node, const value_type& v)
+    {
+        rbtree_node_ptr new_node = construct_node(v);
+        // 如果pa_node是个header，说明整棵树为空，root()为空节点
+        if(pa_node == header)
+        {
+            root() = new_node;
+            leftmost() = new_node;
+            rightmost() = new_node;
+            parent(new_node) = header;
+            color(new_node) = rbtree_black;
+        }
+        // 讨论如果v的键值小于pa_node键值的情况。此时新节点是pa_node的左节点
+        else if(key_compare(v, KeyOfValue()(pa_node)))
+        {
+            left(pa_node) = new_node;
+            parent(new_node) = pa_node;
+            // 如果pa_node是最左节点的时候，树的leftmost()就需要改变
+            if(pa_node == leftmost())
+                leftmost() = new_node;
+        }
+        // 讨论如果v的键值大等于pa_node键值的情况。此时新节点是pa_node的右节点
+        else
+        {
+            right(pa_node) = new_node;
+            parent(new_node) = pa_node;
+            // 如果pa_node是最右节点的时候，树的rightmost()就需要改变
+            if(pa_node == rightmost())
+                rightmost() = new_node;
+        }
+        rbtree_rebalance_after_insert(new_node, header->parent);
+        ++node_count;
+        return iterator(new_node);
+    }
+    
+    template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+    pair<typename rbtree<Key, Value, KeyOfValue, Compare, Alloc>::iterator, bool> rbtree<Key, Value, KeyOfValue, Compare, Alloc>::insert_unique(const value_type& v)
+    {
+        rbtree_node_ptr pa_node = header;
+        rbtree_node_ptr cur_node = root();
+        bool comp;
+        while(cur_node != NULL)
+        {
+            pa_node = cur_node;
+            comp = key_compare(KeyOfValue()(v), key(cur_node));
+            cur_node = (comp ? cur_node->left : cur_node->right);
+        }
+        iterator result(pa_node);
+        // v的键值比最后一个元素的键值还小的情况
+        if(comp)
+        {
+            // 如果pa_node是最左节点，那么当前树中肯定没有和v的键值一样的节点了。
+            // 因为如果有和v一样值的节点，v就会处在某个右子树中，这样pa_node就不会是leftmost()了
+            if(pa_node == leftmost())
+                return pair<iterator, bool>(insert_aux(pa_node, cur_node, v), true);
+            // 如果pa_node不是最左节点，那么说明pa_node现在一定在某个右子树中
+            // v的键值和该右子树根节点的parent比较后，只有大等于该节点的键值才可能进入右子树，所以唯一有可能和v的键值相等的是该最小右子树根节点的parent
+            // 于是让result迭代器变成最小右子树节点的parent的迭代器
+            else
+                --result;
+        }
+        // 因为之前是v的键值大等于result中的node，现在如果得出result中的node也大等于v的键值这一结论，就能说明它们两者键值相等
+        if(!key_compare(key(result.node), KeyOfValue(v)))
+            return pair<iterator, bool>(result, false);
+        // 否则现在就证明整棵树中没有与v的键值相等的节点
+        return pair<iterator, bool>(insert_aux(pa_node, cur_node, v), true);
+    }
+    
+    template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+    typename rbtree<Key, Value, KeyOfValue, Compare, Alloc>::iterator rbtree<Key, Value, KeyOfValue, Compare, Alloc>::insert_equal(const value_type& v)
+    {
+        rbtree_node_ptr pa_node = header;
+        rbtree_node_ptr cur_node = root();
+        while(cur_node != NULL)
+        {
+            pa_node = cur_node;
+            cur_node = (key_compare(KeyOfValue()(v), key(cur_node)) ? left(cur_node) : right(cur_node));
+        }
+        return insert_aux(pa_node, cur_node, v);
+    }
     
     template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
     typename rbtree<Key, Value, KeyOfValue, Compare, Alloc>::iterator rbtree<Key, Value, KeyOfValue, Compare, Alloc>::find(const key_type& k)
