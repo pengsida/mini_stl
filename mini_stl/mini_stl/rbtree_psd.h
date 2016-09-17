@@ -39,9 +39,8 @@
 //     结合上一规则，新增节点的父节点必须为黑
 // }
 
-
-// rbtree的基本框架
 /*
+// rbtree的基本框架
 template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
 class rbtree
 {
