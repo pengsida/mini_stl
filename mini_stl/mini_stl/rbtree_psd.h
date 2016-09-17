@@ -39,6 +39,83 @@
 //     结合上一规则，新增节点的父节点必须为黑
 // }
 
+
+// rbtree的基本框架
+/*
+template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+class rbtree
+{
+public:
+    typedef Key key_type;
+    typedef Value value_type;
+    typedef value_type* pointer;
+    typedef const value_type* const_pointer;
+    typedef value_type& reference;
+    typedef const value_type& const_reference;
+    typedef tree_node* tree_node_ptr;
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
+    typedef tree_iterator<value_type, reference, pointer> iterator;
+    typedef tree_iterator<value_type, const_reference, const_pointer>
+    const_iterator;
+    typedef reverse_iterator<const_iterator> const_reverse_iterator;
+    typedef reverse_iterator<iterator> reverse_iterator;
+    
+private:
+    typedef allocator<tree_node, Alloc> node_allocator;
+    
+public:
+    rbtree();
+    rbtree(const Compare& comp);
+    rbtree(const rbtree& rhs);
+    ~rbtree();
+    
+    Compare key_compare() const;
+    iterator begin();
+    const_iterator begin() const;
+    iterator end();
+    const_iterator end() const;
+    reverse_iterator rbegin();
+    const_reverse_iterator rbegin() const;
+    reverse_iterator rend();
+    const_reverse_iterator rend() const;
+    
+    bool empty() const;
+    size_type size() const;
+    size_type max_size() const;
+    void swap(rbtree& rhs);
+    
+    pair<iterator, bool> insert_unique(const value_type& v);
+    iterator insert_equal(const value_type& v);
+    iterator insert_unique(iterator position, const value_type& v);
+    iterator insert_equal(iterator position, const value_type& v);
+    
+    template<typename InputIterator>
+    void insert_unique(InputIterator first, InputIterator last);
+    
+    template<typename InputIterator>
+    void insert_equal(InputIterator first, InputIterator last);
+    
+    void erase(iterator position);
+    size_type erase(const key_type& k);
+    void erase(iterator first, iterator last);
+    void erase(const key_type* first, const key_type* last);
+    void clear();
+    
+    iterator find(const key_type& k);
+    const_iterator find(const key_type& k) const;
+    size_type count(const key_type& k) const;
+    iterator lower_bound(const key_type& k);
+    const_iterator lower_bound(const key_type& k) const;
+    iterator upper_bound(const key_type& k);
+    const_iterator upper_bound(const key_type& k) const;
+    pair<iterator, iterator> equal_range(const key_type& k);
+    pair<const_iterator, const_iterator> equal_range(const key_type& k) const;
+    
+    bool rb_verify() const;
+};
+*/
+
 namespace mini_stl
 {
     template<typename Value>
@@ -280,6 +357,7 @@ namespace mini_stl
         static void right_rotation(rbtree_node_ptr cur_node, rbtree_node_ptr& root);
         static void left_rotation(rbtree_node_ptr cur_node, rbtree_node_ptr& root);
         static void rbtree_rebalance_after_insert(rbtree_node_ptr cur_node, rbtree_node_ptr& root);
+        static rbtree_node_ptr rbtree_rebalance_for_erase(rbtree_node_ptr cur_node, rbtree_node_ptr& root, rbtree_node_ptr& left_most, rbtree_node_ptr& right_most);
         
         iterator insert_aux(rbtree_node_ptr pa_node, const value_type& v);
         
@@ -360,21 +438,29 @@ namespace mini_stl
                 insert_equal(*first);
         }
         
-        iterator erase(iterator position)
+        void erase(iterator position)
         {
-            return iterator();
+            rbtree_node_ptr tmp = rbtree_rebalance_for_erase(position.node, root(), leftmost(), rightmost());
+            destroy_node(tmp);
+            --node_count;
         }
         
         void erase(iterator first, iterator last)
         {
-            for(; first != last; ++first)
-                erase(first);
+            while(first != last)
+                erase(*(first++));
         }
         
         size_type erase(const key_type& k)
         {
             pair<iterator, iterator> itr = equal_range(k);
             erase(itr.first, itr.second);
+        }
+        
+        void erase(const key_type* first, const key_type* last)
+        {
+            for(; first != last; ++first)
+                erase(*first);
         }
         
         void swap(rbtree& rhs)
@@ -516,6 +602,158 @@ namespace mini_stl
             }
         }
         root->node_color = rbtree_black;
+    }
+    
+    // 这段代码参考了源码
+    template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
+    typename rbtree<Key, Value, KeyOfValue, Compare, Alloc>::rbtree_node_ptr rbtree<Key, Value, KeyOfValue, Compare, Alloc>::rbtree_rebalance_for_erase(rbtree_node_ptr cur_node, rbtree_node_ptr& root, rbtree_node_ptr& left_most, rbtree_node_ptr& right_most)
+    {
+        rbtree_node_ptr replace_node = cur_node;
+        rbtree_node_ptr rebalance_node = NULL;
+        rbtree_node_ptr rebalance_node_parent = NULL;
+        if(replace_node->left == NULL)
+            rebalance_node = replace_node->right;
+        else if(replace_node->right == NULL)
+            rebalance_node = replace_node->left;
+        else
+        {
+            replace_node = replace_node->right;
+            while(replace_node->left != NULL)
+                replace_node = replace_node->left;
+            rebalance_node = replace_node->right;
+        }
+        // 如果replace_node是cur_node的后继节点，则用replace_node替代cur_node
+        if(replace_node != cur_node)
+        {
+            cur_node->left->parent = replace_node;
+            replace_node->left = cur_node->left;
+            if(replace_node != cur_node->right)
+            {
+                rebalance_node_parent = replace_node->parent;
+                if(rebalance_node)
+                    rebalance_node->parent = replace_node->parent;
+                replace_node->parent->left = rebalance_node;
+                replace_node->right = cur_node->right;
+                cur_node->right->parent = replace_node;
+            }
+            else
+                rebalance_node_parent = replace_node;
+            if(root == cur_node)
+                root = replace_node;
+            else if(cur_node->parent->left == cur_node)
+                cur_node->parent->left = replace_node;
+            else
+                cur_node->parent->right = replace_node;
+            replace_node->parent = cur_node->parent;
+            mini_stl::swap(replace_node->node_color, cur_node->node_color);
+            replace_node = cur_node;
+        }
+        // 如果cur_node只有一个子节点或没有子节点，则需要处理cur_node与其子节点的关系
+        else
+        {
+            rebalance_node_parent = cur_node->parent;
+            if(rebalance_node)
+                rebalance_node->parent = cur_node->parent;
+            if(root == cur_node)
+                root = rebalance_node;
+            else
+            {
+                if(cur_node->parent->left == cur_node)
+                    cur_node->parent->left = rebalance_node;
+                else
+                    cur_node->parent->right = rebalance_node;
+            }
+            if(left_most == cur_node)
+            {
+                if(cur_node->right == NULL)
+                    left_most = cur_node->parent;
+                else
+                    left_most = rbtree_node::minimum(rebalance_node);
+            }
+            if(right_most == cur_node)
+            {
+                if(cur_node->left == NULL)
+                    right_most = cur_node->parent;
+                else
+                    right_most = rbtree_node::maximum(rebalance_node);
+            }
+        }
+        if(replace_node->node_color == rbtree_black)
+        {
+            while(rebalance_node != root && (rebalance_node == 0 || rebalance_node->node_color == rbtree_black))
+            {
+                if(rebalance_node == rebalance_node_parent->left)
+                {
+                    rbtree_node_ptr brother = rebalance_node_parent->right;
+                    if(brother->node_color == rbtree_red)
+                    {
+                        brother->node_color = rbtree_black;
+                        rebalance_node_parent->node_color = rbtree_red;
+                        left_rotation(rebalance_node_parent, root);
+                        brother = rebalance_node_parent->right;
+                    }
+                    if((brother->left == 0 || brother->left->node_color == rbtree_black) && (brother->right == 0 || brother->right->node_color == rbtree_black))
+                    {
+                        brother->node_color = rbtree_red;
+                        rebalance_node = rebalance_node_parent;
+                        rebalance_node_parent = rebalance_node_parent->parent;
+                    }
+                    else
+                    {
+                        if(brother->right == 0 || brother->right->node_color == rbtree_black)
+                        {
+                            if(brother->left)
+                                brother->left->node_color = rbtree_black;
+                            right_rotation(brother, root);
+                            brother = rebalance_node_parent->right;
+                        }
+                        brother->node_color = rebalance_node_parent->node_color;
+                        rebalance_node_parent->node_color = rbtree_black;
+                        if(brother->right)
+                            brother->right->node_color = rbtree_black;
+                        left_rotation(rebalance_node_parent, root);
+                        break;
+                    }
+                }
+                else
+                {
+                    rbtree_node_ptr brother = rebalance_node_parent->left;
+                    if(brother->node_color == rbtree_red)
+                    {
+                        brother->node_color = rbtree_black;
+                        rebalance_node_parent->node_color = rbtree_red;
+                        right_rotation(rebalance_node_parent, root);
+                        brother = rebalance_node_parent->right;
+                    }
+                    if((brother->right == 0 || brother->right->node_color == rbtree_black) && (brother->left == 0 || brother->left->node_color == rbtree_black))
+                    {
+                        brother->node_color = rbtree_red;
+                        rebalance_node = rebalance_node_parent;
+                        rebalance_node_parent = rebalance_node_parent->parent;
+                    }
+                    else
+                    {
+                        if(brother->left == 0 || brother->left->node_color == rbtree_black)
+                        {
+                            if(brother->right)
+                                brother->right->node_color = rbtree_black;
+                            brother->node_color = rbtree_red;
+                            left_rotation(brother, root);
+                            brother = rebalance_node_parent->left;
+                        }
+                        brother->node_color = rebalance_node_parent->node_color;
+                        rebalance_node_parent->node_color = rbtree_black;
+                        if(brother->left)
+                            brother->left->node_color = rbtree_black;
+                        right_rotation(rebalance_node_parent, root);
+                        break;
+                    }
+                }
+                if(rebalance_node)
+                    rebalance_node->node_color = rbtree_black;
+            }
+        }
+        return replace_node;
     }
     
     template<typename Key, typename Value, typename KeyOfValue, typename Compare, typename Alloc>
